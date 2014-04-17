@@ -1,0 +1,1 @@
+nasm  slef.nas -o slef.img

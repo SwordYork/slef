@@ -1,0 +1,2 @@
+xxd  helloos.img > imghex.txt
+xxd  -r imghex.txt > t.img
