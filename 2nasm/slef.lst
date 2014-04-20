@@ -1,0 +1,99 @@
+     1                                  ; hello-os
+     2                                  ; TAB=4
+     3                                  
+     4                                  		ORG		0x7c00			; Program load address 
+     5                                  								; origin memory address to load
+     6                                  								; 	
+     7                                  section .text
+     8                                  ; standard FAT16
+     9                                  
+    10 00000000 EB4E                    		JMP		entry			; go to entry
+    11 00000002 90                      		DB		0x90
+    12 00000003 48454C4C4F49504C        		DB		"HELLOIPL"		; 
+    13 0000000B 0002                    		DW		512				;
+    14 0000000D 01                      		DB		1				;
+    15 0000000E 0100                    		DW		1				;
+    16 00000010 02                      		DB		2				;
+    17 00000011 E000                    		DW		224				;
+    18 00000013 400B                    		DW		2880			;
+    19 00000015 F0                      		DB		0xf0			;
+    20 00000016 0900                    		DW		9				;
+    21 00000018 1200                    		DW		18				;
+    22 0000001A 0200                    		DW		2				; 
+    23 0000001C 00000000                		DD		0				; 
+    24 00000020 400B0000                		DD		2880			; 
+    25 00000024 000029                  		DB		0,0,0x29		; 
+    26 00000027 FFFFFFFF                		DD		0xffffffff		; 
+    27 0000002B 536C65662D4F532020-     		DB		"Slef-OS    "	; 
+    28 00000034 2020               
+    29 00000036 4641543132202020        		DB		"FAT12   "		; 
+    30 0000003E <res 00000012>          		RESB	18				; 
+    31          ******************       warning: uninitialized space declared in .text section: zeroing
+    32                                  
+    33                                  ; Program  body
+    34                                  
+    35                                  ; Main Register:
+    36                                  ; (E)AX(H,L)	|	accumulator
+    37                                  ; (E)CX(H,L)	|	counter
+    38                                  ; (E)DX(H,L)	|	data
+    39                                  ; (E)BX(H,L)	|	base				| mem
+    40                                  ; Index Register
+    41                                  ; (E)SP			| 	stack pointer
+    42                                  ; (E)BP			|	base pointer		| mem
+    43                                  ; (E)SI			| 	source index		| mem
+    44                                  ; (E)DI			| 	destination index	| mem
+    45                                  ; Segment register
+    46                                  ; ES			|	extra segment
+    47                                  ; CS			| 	code segment
+    48                                  ; SS			| 	stack segment
+    49                                  ; DS			|	data segment
+    50                                  ; FS			| 	segment part2
+    51                                  ; GS			| 	segment part3
+    52                                  
+    53                                  
+    54                                  entry:
+    55 00000050 B80000                  		MOV		AX,0			; Register initial: AX = 0
+    56 00000053 8ED0                    		MOV		SS,AX
+    57 00000055 BC007C                  		MOV		SP,0x7c00
+    58 00000058 8ED8                    		MOV		DS,AX
+    59 0000005A 8EC0                    		MOV		ES,AX
+    60                                  
+    61 0000005C BE[7400]                		MOV		SI,msg			; msg Address: 0x7c74
+    62                                  
+    63                                  putloop:
+    64 0000005F 8A04                    		MOV		AL,[SI]			; Get data in memory SI
+    65 00000061 83C601                  		ADD		SI,1			; SI add 1
+    66 00000064 3C00                    		CMP		AL,0
+    67 00000066 7409                    		JE		fin				; jump if equal
+    68 00000068 B40E                    		MOV		AH,0x0e			; display a char
+    69 0000006A BB0000                  		MOV		BX,00			; color 
+    70 0000006D CD10                    		INT		0x10			; call BIOS video: interrupt 16th function
+    71 0000006F EBEE                    		JMP		putloop
+    72                                  
+    73                                  fin:
+    74 00000071 F4                      		HLT						; halt cpu
+    75 00000072 EBFD                    		JMP		fin				; 
+    76                                  
+    77                                  msg:
+    78 00000074 0A0A                    		DB		0x0a, 0x0a		; new lines
+    79 00000076 4E41534D2053756363-     		DB		"NASM Success!!"
+    80 0000007F 6573732121         
+    81 00000084 0A                      		DB		0x0a			; new line
+    82 00000085 00                      		DB		0
+    83                                  
+    84 00000086 <res 00000178>          		RESB	0x1fe-($-$$)	; fill 0x00 only .text section, so $$ = 0
+    85          ******************       warning: uninitialized space declared in .text section: zeroing
+    86                                  
+    87                                  		;RESB	0x7dfe-($-$$)	; This is nask, nasm not support	
+    88                                  
+    89 000001FE 55AA                    		DB		0x55, 0xaa
+    90                                  
+    91                                  
+    92                                  ; other
+    93                                  
+    94 00000200 F0FFFF0000000000        		DB		0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
+    95 00000208 <res 000011F8>          		RESB	4600
+    96          ******************       warning: uninitialized space declared in .text section: zeroing
+    97 00001400 F0FFFF0000000000        		DB		0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
+    98 00001408 <res 00166BF8>          		RESB	1469432
+    99          ******************       warning: uninitialized space declared in .text section: zeroing
