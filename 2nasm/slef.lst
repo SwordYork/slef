@@ -66,7 +66,7 @@
     66 00000064 3C00                    		CMP		AL,0
     67 00000066 7409                    		JE		fin				; jump if equal
     68 00000068 B40E                    		MOV		AH,0x0e			; display a char
-    69 0000006A BB0000                  		MOV		BX,00			; color 
+    69 0000006A BB0F00                  		MOV		BX,15			; color 
     70 0000006D CD10                    		INT		0x10			; call BIOS video: interrupt 16th function
     71 0000006F EBEE                    		JMP		putloop
     72                                  
