@@ -1,0 +1,5 @@
+$ dd bs=512 count=2880 if=/dev/zero of=floppy.img
+$ mkfs.msdos floppy.img
+$ sudo mount -o loop image.img /media/floppy/
+<<<copy your files on to the "drive" now>>>
+$ sudo umount /media/floppy/ 
