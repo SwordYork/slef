@@ -33,7 +33,7 @@ entry:
 		MOV		SP,0x7c00
 		MOV		DS,AX			;date segment register
 		mov 	AH,0x00
-		mov		DL,0x80
+		mov		DL,0x00
 		INT		0x13
 		JC 		error
 
@@ -50,27 +50,32 @@ readloop:
 		MOV		SI,0
 
 retry:
+		MOV		AH,0x02			; AH=0x02: bios read sector 
+		MOV		AL,0x01			; Read one
+		MOV		BX,0x0000		
+		MOV		DL,0x00			; A driver
 		INT		0x13			; call
 		JNC		pullmsg			; no error then print
 		ADD		SI,1			; try 5 times
 		CMP		SI,5
 		JAE		error			;all error than break
 		MOV		AH,0x00			;reset
-		MOV		DL,0x80
+		MOV		DL,0x00
 		INT		0x13
 		JMP		retry
 
 next:
-		MOV		BX,0x0000		
 		MOV		AX,ES
 		ADD		AX,0x0020
 		MOV		ES,AX			;ES update
 		ADD		CL,1
 		CMP		CL,8
-		MOV		AH,0x02			; AH=0x02: bios read sector 
-		MOV		AL,0x01			; Read one
-		MOV		DL,0x80			; A driver
 		JBE		readloop
+		MOV		CL,1
+		MOV		DH,0
+		ADD		CH,1
+		CMP		CH,10
+		JB		readloop
 
 fin:
 		HLT						; 
@@ -121,4 +126,6 @@ msg:
 		DB		0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
 		RESB	4600
 		DB		0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
-		RESB	1469432
+		RESB	4600
+		DB		0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
+		RESB	1464824
