@@ -39,36 +39,60 @@ entry:
 
 ; Read Sector
 
-		MOV		BX,0x8000		;memory ES:BX 0x8200
+		MOV		BX,0x8000		;memory ES:BX 0x8000
 		MOV		ES,BX
 		MOV		CH,0x00			; cylinder 0
 		MOV		DH,0x00			; head 0 may be 1, obverse reverse side
 		MOV		CL,0x02			; sector 2
+		JMP		next
 
+readloop:
 		MOV		SI,0
 
 retry:
-		MOV		AH,0x02			; AH=0x02: bios read sector 
-		MOV		AL,0x01			; Read one
-		MOV		BX,0x0000
-		MOV		DL,0x80			; A driver
 		INT		0x13			; call
-		JNC		fin
-		ADD		SI,1
+		JNC		pullmsg			; no error then print
+		ADD		SI,1			; try 5 times
 		CMP		SI,5
-		JAE		error
-		MOV		AH,0x00
-		MOv		DL,0x00
+		JAE		error			;all error than break
+		MOV		AH,0x00			;reset
+		MOV		DL,0x80
 		INT		0x13
 		JMP		retry
 
+next:
+		MOV		BX,0x0000		
+		MOV		AX,ES
+		ADD		AX,0x0020
+		MOV		ES,AX			;ES update
+		ADD		CL,1
+		CMP		CL,8
+		MOV		AH,0x02			; AH=0x02: bios read sector 
+		MOV		AL,0x01			; Read one
+		MOV		DL,0x80			; A driver
+		JBE		readloop
 
 fin:
 		HLT						; 
 		JMP		fin				;
 
+pullmsg:
+		MOV		SI,[ES:BX]
+;		MOV		SI,msg2
+
+printmsg:
+		MOV		AL,[SI]
+		ADD		SI,1			; 
+		CMP		AL,0
+		JE		next
+		MOV		AH,0x0e			;
+		MOV		BX,15			;
+		INT		0x10			;
+		JMP		printmsg
+		
 error:
 		MOV		SI,msg
+
 putloop:
 		MOV		AL,[SI]
 		ADD		SI,1			; 
@@ -78,6 +102,11 @@ putloop:
 		MOV		BX,15			;
 		INT		0x10			;
 		JMP		putloop
+msg2:
+		DB		0x0a, 0x0a		;
+		DB		"loading"
+		DB		0x0a			;
+		DB		0
 msg:
 		DB		0x0a, 0x0a		;
 		DB		"load error"
