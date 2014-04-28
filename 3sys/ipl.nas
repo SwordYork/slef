@@ -22,7 +22,7 @@ CYLS	EQU		10
 		DD		2880			
 		DB		0,0,0x29		
 		DD		0xffffffff		
-		DB		"HARIBOTEOS "	
+		DB		"SELFOS     "	
 		DB		"FAT12   "		
 		RESB	18				
 
