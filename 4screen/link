@@ -1,6 +1,0 @@
-gcc -ffreestanding -c -m32 -o bootpack.o bootpack.c
-nasm naskfunc.nas -f elf32 -o naskfunc.o
-nasm kernel_entry.asm -f elf32 -o kernel_entry.o
-nasm asmhead.nas -o asmhead.bin
-ld -Ttext 0x280000 --oformat binary -melf_i386 -o bootpack.bin kernel_entry.o bootpack.o naskfunc.o
-cat asmhead.bin bootpack.bin > slef.sys
