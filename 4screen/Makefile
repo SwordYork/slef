@@ -13,7 +13,10 @@ slef.img: boot.bin kernel.bin fill.bin
 kernel.bin: kernel_entry.o asmfunc.o kernel.o
 	ld -o $@ $(LD_ARCH) $(KERNEL_OFFSET) $(LD_FORMAT) $^
 
-kernel.o: kernel.c
+kernel.s: kernel.c
+	gcc $(GCC_FLAG) -S -o kernel.s -c kernel.c
+
+kernel.o: kernel.c kernel.s
 	gcc $(GCC_FLAG) -c $< $(GCC_ARCH) -o $@
 
 kernel_entry.o: kernel_entry.asm
