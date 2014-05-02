@@ -1,6 +1,6 @@
 ;load DH sectors to MEM ES:BX 
 [bits 16]
-CYLS equ 1
+RCYLS equ 1
 
 disk_load:
 	pusha
@@ -62,7 +62,7 @@ disk_load_next_cylinder:
 
 
 ;	add ch, 1
-;	cmp ch, CYLS
+;	cmp ch, RCYLS
 ;	jb disk_load_next_cylinder
 	
 read_done:
