@@ -6,13 +6,15 @@ void _io_out8(int port, int data);
 int _io_load_eflags(void);
 void _io_store_eflags(int eflags);
 
-//void _write_mem8(int addr, int data);
 
 void init_palette(void);
 void set_palette(int start, int end, unsigned char *rgb);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen(char *vram, int xsize, int ysize);
-void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
+void putfont8(char *vram, int xsize, int x, int y, char color, char *font);
+void putfont8_asc(char *vram, int xsize, int x, int y, char color, unsigned char *s);
+void itoa(char *s,int n, int max_length);
+
 
 #define COL8_000000		0
 #define COL8_FF0000		1
@@ -31,11 +33,18 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 #define COL8_008484		14
 #define COL8_848484		15
 
+
+#define MAX_LENGTH 		40
+/*
+ * retrive bootinfo which stored in 0x0ff0 - 0x0ff9
+ */
 struct BOOTINFO{
 	char cyls, leds, vmode, reserve;
 	short scrnx, scrny;
 	char *vram;
 };
+
+
 
 extern char hankaku[4096];
 void main(){
@@ -48,15 +57,18 @@ void main(){
 	};
 	*/
 
-
+	char s[MAX_LENGTH];
+	
 	init_palette();
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
-	putfont8(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, hankaku + 'A' * 16 );
-	putfont8(binfo->vram, binfo->scrnx, 16, 8, COL8_FFFFFF, hankaku + 'B' * 16 );
-	putfont8(binfo->vram, binfo->scrnx, 24, 8, COL8_FFFFFF, hankaku + 'c' * 16 );
-	putfont8(binfo->vram, binfo->scrnx, 32, 8, COL8_FFFFFF, hankaku + ' ' * 16 );
-	putfont8(binfo->vram, binfo->scrnx, 40, 8, COL8_FFFFFF, hankaku + '1' * 16 );
-	putfont8(binfo->vram, binfo->scrnx, 48, 8, COL8_FFFFFF, hankaku + '$' * 16 );
+	putfont8_asc(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF,"hello slef!");
+
+//	sprintf(s,"scrnx = %d", binfo->scrnx);
+	itoa(s,binfo->scrnx,MAX_LENGTH);
+	putfont8_asc(binfo->vram, binfo->scrnx, 8, 64, COL8_FFFFFF, s);
+
+	itoa(s,binfo->scrny,MAX_LENGTH);
+	putfont8_asc(binfo->vram, binfo->scrnx, 8, 80, COL8_FFFFFF, s);
 
 	for(;;){
 		_io_hlt();
@@ -64,6 +76,9 @@ void main(){
 }	
 
 
+/*
+ * color setting
+ */
 void init_palette(void)
 {
 	static unsigned char table_rgb[16 * 3] = {
@@ -90,6 +105,11 @@ void init_palette(void)
 }
 
 
+/*
+ * 	set color value
+ * 	use 16 color
+ */
+
 void set_palette(int start, int end, unsigned char *rgb)
 {
 	int i, eflags;
@@ -106,6 +126,10 @@ void set_palette(int start, int end, unsigned char *rgb)
 	return;
 }
 
+/*
+ *	draw box
+ */
+
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1)
 {
 	int x,y;
@@ -116,6 +140,10 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 	}
 	return;
 }
+
+/*
+ * draw task bar
+ */
 
 void init_screen(char *vram, int xsize, int ysize){
 
@@ -139,6 +167,11 @@ void init_screen(char *vram, int xsize, int ysize){
 	return;
 }
 
+/*
+ *  print single char
+ *  with color c
+ *  font matrix font
+ */
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
 {
 	int i;
@@ -155,5 +188,49 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
 		if ((d & 0x02) != 0) { p[6] = c; }
 		if ((d & 0x01) != 0) { p[7] = c; }
 	}
+	return;
+}
+
+/*
+ * 	print string to screen
+ * 	string last byte is 0x00
+ */
+void putfont8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s)
+{
+	for(; *s != 0x00; s++){
+		putfont8(vram, xsize, x, y, c, hankaku + *s * 16);
+		x += 8;
+	}
+	return;
+}
+
+/*
+ *	n >= 0
+ */
+void itoa(char *s,int n, int max_length){
+	if (n == 0){
+		s[0] = '0';
+		s[1] = '\0';
+	}
+
+	int pos = 0;
+	int m = n;
+	while(m != 0){
+		++ pos;
+		m /= 10;
+	}
+
+	if(pos >= max_length){
+		s[0] = '\0';
+		return;
+	}
+
+	s[pos] = '\0';
+	--pos;
+	while( n != 0){
+		s[pos--] = '0' + ( n % 10);
+		n /= 10;
+	}
+
 	return;
 }

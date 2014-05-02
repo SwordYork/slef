@@ -4100,6 +4100,9 @@ hankaku:
 	.byte	0
 	.byte	0
 	.byte	0
+	.section	.rodata
+.LC0:
+	.string	"hello slef!"
 	.text
 	.globl	main
 	.type	main, @function
@@ -4111,7 +4114,7 @@ main:
 	.cfi_offset 6, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movq	$4080, -8(%rbp)
 	call	init_palette
 	movq	-8(%rbp), %rax
@@ -4130,67 +4133,52 @@ main:
 	movswl	%ax, %esi
 	movq	-8(%rbp), %rax
 	movq	8(%rax), %rax
-	movl	$hankaku+1040, %r9d
+	movl	$.LC0, %r9d
 	movl	$7, %r8d
 	movl	$8, %ecx
 	movl	$8, %edx
 	movq	%rax, %rdi
-	call	putfont8
+	call	putfont8_asc
 	movq	-8(%rbp), %rax
 	movzwl	4(%rax), %eax
-	movswl	%ax, %esi
-	movq	-8(%rbp), %rax
-	movq	8(%rax), %rax
-	movl	$hankaku+1056, %r9d
-	movl	$7, %r8d
-	movl	$8, %ecx
-	movl	$16, %edx
-	movq	%rax, %rdi
-	call	putfont8
-	movq	-8(%rbp), %rax
-	movzwl	4(%rax), %eax
-	movswl	%ax, %esi
-	movq	-8(%rbp), %rax
-	movq	8(%rax), %rax
-	movl	$hankaku+1584, %r9d
-	movl	$7, %r8d
-	movl	$8, %ecx
-	movl	$24, %edx
-	movq	%rax, %rdi
-	call	putfont8
-	movq	-8(%rbp), %rax
-	movzwl	4(%rax), %eax
-	movswl	%ax, %esi
-	movq	-8(%rbp), %rax
-	movq	8(%rax), %rax
-	movl	$hankaku+512, %r9d
-	movl	$7, %r8d
-	movl	$8, %ecx
-	movl	$32, %edx
-	movq	%rax, %rdi
-	call	putfont8
-	movq	-8(%rbp), %rax
-	movzwl	4(%rax), %eax
-	movswl	%ax, %esi
-	movq	-8(%rbp), %rax
-	movq	8(%rax), %rax
-	movl	$hankaku+784, %r9d
-	movl	$7, %r8d
-	movl	$8, %ecx
+	movswl	%ax, %ecx
+	leaq	-48(%rbp), %rax
 	movl	$40, %edx
+	movl	%ecx, %esi
 	movq	%rax, %rdi
-	call	putfont8
+	call	itoa
 	movq	-8(%rbp), %rax
 	movzwl	4(%rax), %eax
 	movswl	%ax, %esi
 	movq	-8(%rbp), %rax
 	movq	8(%rax), %rax
-	movl	$hankaku+576, %r9d
+	leaq	-48(%rbp), %rdx
+	movq	%rdx, %r9
 	movl	$7, %r8d
-	movl	$8, %ecx
-	movl	$48, %edx
+	movl	$64, %ecx
+	movl	$8, %edx
 	movq	%rax, %rdi
-	call	putfont8
+	call	putfont8_asc
+	movq	-8(%rbp), %rax
+	movzwl	6(%rax), %eax
+	movswl	%ax, %ecx
+	leaq	-48(%rbp), %rax
+	movl	$40, %edx
+	movl	%ecx, %esi
+	movq	%rax, %rdi
+	call	itoa
+	movq	-8(%rbp), %rax
+	movzwl	4(%rax), %eax
+	movswl	%ax, %esi
+	movq	-8(%rbp), %rax
+	movq	8(%rax), %rax
+	leaq	-48(%rbp), %rdx
+	movq	%rdx, %r9
+	movl	$7, %r8d
+	movl	$80, %ecx
+	movl	$8, %edx
+	movq	%rax, %rdi
+	call	putfont8_asc
 .L2:
 	call	_io_hlt
 	jmp	.L2
@@ -4207,7 +4195,7 @@ init_palette:
 	.cfi_offset 6, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
-	movl	$table_rgb.1326, %edx
+	movl	$table_rgb.1338, %edx
 	movl	$15, %esi
 	movl	$0, %edi
 	call	set_palette
@@ -4676,11 +4664,159 @@ putfont8:
 	.cfi_endproc
 .LFE5:
 	.size	putfont8, .-putfont8
+	.globl	putfont8_asc
+	.type	putfont8_asc, @function
+putfont8_asc:
+.LFB6:
+	.cfi_startproc
+	pushq	%rbp
+	.cfi_def_cfa_offset 16
+	.cfi_offset 6, -16
+	movq	%rsp, %rbp
+	.cfi_def_cfa_register 6
+	subq	$32, %rsp
+	movq	%rdi, -8(%rbp)
+	movl	%esi, -12(%rbp)
+	movl	%edx, -16(%rbp)
+	movl	%ecx, -20(%rbp)
+	movl	%r8d, %eax
+	movq	%r9, -32(%rbp)
+	movb	%al, -24(%rbp)
+	jmp	.L30
+.L31:
+	movq	-32(%rbp), %rax
+	movzbl	(%rax), %eax
+	movzbl	%al, %eax
+	sall	$4, %eax
+	cltq
+	leaq	hankaku(%rax), %r8
+	movsbl	-24(%rbp), %edi
+	movl	-20(%rbp), %ecx
+	movl	-16(%rbp), %edx
+	movl	-12(%rbp), %esi
+	movq	-8(%rbp), %rax
+	movq	%r8, %r9
+	movl	%edi, %r8d
+	movq	%rax, %rdi
+	call	putfont8
+	addl	$8, -16(%rbp)
+	addq	$1, -32(%rbp)
+.L30:
+	movq	-32(%rbp), %rax
+	movzbl	(%rax), %eax
+	testb	%al, %al
+	jne	.L31
+	nop
+	leave
+	.cfi_def_cfa 7, 8
+	ret
+	.cfi_endproc
+.LFE6:
+	.size	putfont8_asc, .-putfont8_asc
+	.globl	itoa
+	.type	itoa, @function
+itoa:
+.LFB7:
+	.cfi_startproc
+	pushq	%rbp
+	.cfi_def_cfa_offset 16
+	.cfi_offset 6, -16
+	movq	%rsp, %rbp
+	.cfi_def_cfa_register 6
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	%edx, -32(%rbp)
+	cmpl	$0, -28(%rbp)
+	jne	.L34
+	movq	-24(%rbp), %rax
+	movb	$48, (%rax)
+	movq	-24(%rbp), %rax
+	addq	$1, %rax
+	movb	$0, (%rax)
+.L34:
+	movl	$0, -4(%rbp)
+	movl	-28(%rbp), %eax
+	movl	%eax, -8(%rbp)
+	jmp	.L35
+.L36:
+	addl	$1, -4(%rbp)
+	movl	-8(%rbp), %ecx
+	movl	$1717986919, %edx
+	movl	%ecx, %eax
+	imull	%edx
+	sarl	$2, %edx
+	movl	%ecx, %eax
+	sarl	$31, %eax
+	subl	%eax, %edx
+	movl	%edx, %eax
+	movl	%eax, -8(%rbp)
+.L35:
+	cmpl	$0, -8(%rbp)
+	jne	.L36
+	movl	-4(%rbp), %eax
+	cmpl	-32(%rbp), %eax
+	jl	.L37
+	movq	-24(%rbp), %rax
+	movb	$0, (%rax)
+	jmp	.L33
+.L37:
+	movl	-4(%rbp), %eax
+	movslq	%eax, %rdx
+	movq	-24(%rbp), %rax
+	addq	%rdx, %rax
+	movb	$0, (%rax)
+	subl	$1, -4(%rbp)
+	jmp	.L39
+.L40:
+	movl	-4(%rbp), %eax
+	leal	-1(%rax), %edx
+	movl	%edx, -4(%rbp)
+	movslq	%eax, %rdx
+	movq	-24(%rbp), %rax
+	leaq	(%rdx,%rax), %rsi
+	movl	-28(%rbp), %ecx
+	movl	$1717986919, %edx
+	movl	%ecx, %eax
+	imull	%edx
+	sarl	$2, %edx
+	movl	%ecx, %eax
+	sarl	$31, %eax
+	subl	%eax, %edx
+	movl	%edx, %eax
+	sall	$2, %eax
+	addl	%edx, %eax
+	addl	%eax, %eax
+	subl	%eax, %ecx
+	movl	%ecx, %edx
+	movl	%edx, %eax
+	addl	$48, %eax
+	movb	%al, (%rsi)
+	movl	-28(%rbp), %ecx
+	movl	$1717986919, %edx
+	movl	%ecx, %eax
+	imull	%edx
+	sarl	$2, %edx
+	movl	%ecx, %eax
+	sarl	$31, %eax
+	subl	%eax, %edx
+	movl	%edx, %eax
+	movl	%eax, -28(%rbp)
+.L39:
+	cmpl	$0, -28(%rbp)
+	jne	.L40
+	nop
+.L33:
+	popq	%rbp
+	.cfi_def_cfa 7, 8
+	ret
+	.cfi_endproc
+.LFE7:
+	.size	itoa, .-itoa
 	.data
 	.align 32
-	.type	table_rgb.1326, @object
-	.size	table_rgb.1326, 48
-table_rgb.1326:
+	.type	table_rgb.1338, @object
+	.size	table_rgb.1338, 48
+table_rgb.1338:
 	.byte	0
 	.byte	0
 	.byte	0
