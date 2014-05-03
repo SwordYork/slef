@@ -31,20 +31,20 @@ entry:
 	mov bp, 0x9000				;stack position for popa pusha
 	mov sp, bp
 	
-	mov bx, MSG_REAL_MODE
-	call print_string
+;	mov bx, MSG_REAL_MODE
+;	call print_string
 
 	call load_kernel
 
-%include "./message/print_string.asm"
+;%include "./message/print_string.asm"
 %include "./disk/disk_load_all.asm"
-%include "./pm/gdt.asm"
 %include "./pm/switch_to_pm.asm"
+%include "./pm/gdt.asm"
 
 [bits 16]
 load_kernel:
-	mov bx, MSG_LOAD_KERNEL
-	call print_string
+;	mov bx, MSG_LOAD_KERNEL
+;	call print_string
 	jmp disk_load
 
 read_done:
@@ -55,13 +55,14 @@ read_done:
 [bits 32]
 BEGIN_PM:
 	jmp KERNEL_OFFSET
+;	jmp 0x00280000
 	jmp $
 
 
 
 BOOT_DRIVE db 0
-MSG_REAL_MODE db "Started in 16-bit Real Mode",0
-MSG_LOAD_KERNEL db "Loading kernel into memory.",0
+;MSG_REAL_MODE db "Started in 16-bit Real Mode",0
+;MSG_LOAD_KERNEL db "Loading kernel into memory.",0
 times 510 -( $ - $$ ) db 0 
 dw 0xaa55
 

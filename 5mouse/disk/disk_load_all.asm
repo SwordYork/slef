@@ -50,9 +50,9 @@ disk_load_next:
 	jmp read_done 
 
 disk_error:
-	mov bx, DISK_ERROR_MSG
-	call print_string
+;	mov bx, DISK_ERROR_MSG
+;	call print_string
 	jmp $
 
-DISK_ERROR_MSG: 
-	db "Disk read error", 0
+;DISK_ERROR_MSG: 
+;	db "Disk read error", 0
