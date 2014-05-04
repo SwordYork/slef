@@ -30,25 +30,25 @@ switch_to_pm:
 	cli				;disable cpu interrupt
 
 ;enable A20GATE
-;	call	waitkbdout
-;	mov		al,0xd1
-;	out 	0x64,al
-;	call 	waitkbdout
-;	mov 	al,0xdf
-;	out 	0x60,al
-;	call 	waitkbdout
-;	jmp		toload_gdt
+	call	waitkbdout
+	mov		al,0xd1
+	out 	0x64,al
+	call 	waitkbdout
+	mov 	al,0xdf
+	out 	0x60,al
+	call 	waitkbdout
+	jmp		toload_gdt
 
 
 ; waitkbdout
-;waitkbdout:
-;	in 	al,0x64
-;	and al,0x64
-;	jnz	waitkbdout
-;	ret
+waitkbdout:
+	in 	al,0x64
+	and al,0x02
+	jnz	waitkbdout
+	ret
 
 
-;toload_gdt:
+toload_gdt:
 	lgdt [gdt_descriptor]
 	
 	mov eax, cr0

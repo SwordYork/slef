@@ -29,11 +29,11 @@ entry:
 
 	mov [BOOT_DRIVE], dl		;drive number
 		xor ax, ax
-        mov ds, ax
-        mov es, ax
+    ;    mov es, ax
         mov ss, ax
-		mov bp, 0x9000				;stack position for popa pusha
-		mov sp, bp
+;		mov bp, 0x9000				;stack position for popa pusha
+		mov sp, 0x7c00
+        mov ds, ax
 
 	mov bx, MSG_REAL_MODE
 	call print_string
