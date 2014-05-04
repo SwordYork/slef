@@ -52,6 +52,7 @@ load_kernel:
 	jmp disk_load
 
 read_done:
+	jmp $
 	call switch_to_pm
 	jmp $
 
