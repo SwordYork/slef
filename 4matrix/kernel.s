@@ -10,7 +10,7 @@ main:
 	.cfi_offset 6, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
-	subq	$32, %rsp
+	subq	$16, %rsp
 	call	init_palette
 	movq	$655360, -8(%rbp)
 	movl	$320, -12(%rbp)
@@ -19,138 +19,158 @@ main:
 	leal	-29(%rax), %edx
 	movl	-12(%rbp), %eax
 	leal	-1(%rax), %ecx
+	subq	$8, %rsp
 	movl	-12(%rbp), %esi
 	movq	-8(%rbp), %rax
-	movl	%edx, (%rsp)
+	pushq	%rdx
 	movl	%ecx, %r9d
 	movl	$0, %r8d
 	movl	$0, %ecx
 	movl	$14, %edx
 	movq	%rax, %rdi
 	call	boxfill8
+	addq	$16, %rsp
 	movl	-16(%rbp), %eax
 	leal	-28(%rax), %edx
 	movl	-12(%rbp), %eax
 	leal	-1(%rax), %edi
 	movl	-16(%rbp), %eax
 	leal	-28(%rax), %ecx
+	subq	$8, %rsp
 	movl	-12(%rbp), %esi
 	movq	-8(%rbp), %rax
-	movl	%edx, (%rsp)
+	pushq	%rdx
 	movl	%edi, %r9d
 	movl	%ecx, %r8d
 	movl	$0, %ecx
 	movl	$8, %edx
 	movq	%rax, %rdi
 	call	boxfill8
+	addq	$16, %rsp
 	movl	-16(%rbp), %eax
 	leal	-27(%rax), %edx
 	movl	-12(%rbp), %eax
 	leal	-1(%rax), %edi
 	movl	-16(%rbp), %eax
 	leal	-27(%rax), %ecx
+	subq	$8, %rsp
 	movl	-12(%rbp), %esi
 	movq	-8(%rbp), %rax
-	movl	%edx, (%rsp)
+	pushq	%rdx
 	movl	%edi, %r9d
 	movl	%ecx, %r8d
 	movl	$0, %ecx
 	movl	$7, %edx
 	movq	%rax, %rdi
 	call	boxfill8
+	addq	$16, %rsp
 	movl	-16(%rbp), %eax
 	leal	-1(%rax), %edx
 	movl	-12(%rbp), %eax
 	leal	-1(%rax), %edi
 	movl	-16(%rbp), %eax
 	leal	-26(%rax), %ecx
+	subq	$8, %rsp
 	movl	-12(%rbp), %esi
 	movq	-8(%rbp), %rax
-	movl	%edx, (%rsp)
+	pushq	%rdx
 	movl	%edi, %r9d
 	movl	%ecx, %r8d
 	movl	$0, %ecx
 	movl	$8, %edx
 	movq	%rax, %rdi
 	call	boxfill8
+	addq	$16, %rsp
 	movl	-16(%rbp), %eax
 	leal	-24(%rax), %edx
 	movl	-16(%rbp), %eax
 	leal	-24(%rax), %ecx
+	subq	$8, %rsp
 	movl	-12(%rbp), %esi
 	movq	-8(%rbp), %rax
-	movl	%edx, (%rsp)
+	pushq	%rdx
 	movl	$59, %r9d
 	movl	%ecx, %r8d
 	movl	$3, %ecx
 	movl	$7, %edx
 	movq	%rax, %rdi
 	call	boxfill8
+	addq	$16, %rsp
 	movl	-16(%rbp), %eax
 	leal	-4(%rax), %edx
 	movl	-16(%rbp), %eax
 	leal	-24(%rax), %ecx
+	subq	$8, %rsp
 	movl	-12(%rbp), %esi
 	movq	-8(%rbp), %rax
-	movl	%edx, (%rsp)
+	pushq	%rdx
 	movl	$2, %r9d
 	movl	%ecx, %r8d
 	movl	$2, %ecx
 	movl	$7, %edx
 	movq	%rax, %rdi
 	call	boxfill8
+	addq	$16, %rsp
 	movl	-16(%rbp), %eax
 	leal	-4(%rax), %edx
 	movl	-16(%rbp), %eax
 	leal	-4(%rax), %ecx
+	subq	$8, %rsp
 	movl	-12(%rbp), %esi
 	movq	-8(%rbp), %rax
-	movl	%edx, (%rsp)
+	pushq	%rdx
 	movl	$59, %r9d
 	movl	%ecx, %r8d
 	movl	$3, %ecx
 	movl	$15, %edx
 	movq	%rax, %rdi
 	call	boxfill8
+	addq	$16, %rsp
 	movl	-16(%rbp), %eax
 	leal	-5(%rax), %edx
 	movl	-16(%rbp), %eax
 	leal	-23(%rax), %ecx
+	subq	$8, %rsp
 	movl	-12(%rbp), %esi
 	movq	-8(%rbp), %rax
-	movl	%edx, (%rsp)
+	pushq	%rdx
 	movl	$59, %r9d
 	movl	%ecx, %r8d
 	movl	$59, %ecx
 	movl	$15, %edx
 	movq	%rax, %rdi
 	call	boxfill8
+	addq	$16, %rsp
 	movl	-16(%rbp), %eax
 	leal	-3(%rax), %edx
 	movl	-16(%rbp), %eax
 	leal	-3(%rax), %ecx
+	subq	$8, %rsp
 	movl	-12(%rbp), %esi
 	movq	-8(%rbp), %rax
-	movl	%edx, (%rsp)
+	pushq	%rdx
 	movl	$59, %r9d
 	movl	%ecx, %r8d
 	movl	$2, %ecx
 	movl	$0, %edx
 	movq	%rax, %rdi
 	call	boxfill8
+	addq	$16, %rsp
 	movl	-16(%rbp), %eax
 	leal	-3(%rax), %edx
 	movl	-16(%rbp), %eax
 	leal	-24(%rax), %ecx
+	subq	$8, %rsp
 	movl	-12(%rbp), %esi
 	movq	-8(%rbp), %rax
-	movl	%edx, (%rsp)
+	pushq	%rdx
 	movl	$60, %r9d
 	movl	%ecx, %r8d
 	movl	$60, %ecx
 	movl	$0, %edx
 	movq	%rax, %rdi
 	call	boxfill8
+	addq	$16, %rsp
 	movl	-16(%rbp), %eax
 	leal	-24(%rax), %ecx
 	movl	-12(%rbp), %eax
@@ -159,15 +179,17 @@ main:
 	leal	-24(%rax), %edi
 	movl	-12(%rbp), %eax
 	leal	-47(%rax), %edx
+	subq	$8, %rsp
 	movl	-12(%rbp), %esi
 	movq	-8(%rbp), %rax
-	movl	%ecx, (%rsp)
+	pushq	%rcx
 	movl	%r8d, %r9d
 	movl	%edi, %r8d
 	movl	%edx, %ecx
 	movl	$15, %edx
 	movq	%rax, %rdi
 	call	boxfill8
+	addq	$16, %rsp
 	movl	-16(%rbp), %eax
 	leal	-4(%rax), %ecx
 	movl	-12(%rbp), %eax
@@ -176,15 +198,17 @@ main:
 	leal	-23(%rax), %edi
 	movl	-12(%rbp), %eax
 	leal	-47(%rax), %edx
+	subq	$8, %rsp
 	movl	-12(%rbp), %esi
 	movq	-8(%rbp), %rax
-	movl	%ecx, (%rsp)
+	pushq	%rcx
 	movl	%r8d, %r9d
 	movl	%edi, %r8d
 	movl	%edx, %ecx
 	movl	$15, %edx
 	movq	%rax, %rdi
 	call	boxfill8
+	addq	$16, %rsp
 	movl	-16(%rbp), %eax
 	leal	-3(%rax), %ecx
 	movl	-12(%rbp), %eax
@@ -193,15 +217,17 @@ main:
 	leal	-3(%rax), %edi
 	movl	-12(%rbp), %eax
 	leal	-47(%rax), %edx
+	subq	$8, %rsp
 	movl	-12(%rbp), %esi
 	movq	-8(%rbp), %rax
-	movl	%ecx, (%rsp)
+	pushq	%rcx
 	movl	%r8d, %r9d
 	movl	%edi, %r8d
 	movl	%edx, %ecx
 	movl	$7, %edx
 	movq	%rax, %rdi
 	call	boxfill8
+	addq	$16, %rsp
 	movl	-16(%rbp), %eax
 	leal	-3(%rax), %ecx
 	movl	-12(%rbp), %eax
@@ -210,15 +236,17 @@ main:
 	leal	-24(%rax), %edi
 	movl	-12(%rbp), %eax
 	leal	-3(%rax), %edx
+	subq	$8, %rsp
 	movl	-12(%rbp), %esi
 	movq	-8(%rbp), %rax
-	movl	%ecx, (%rsp)
+	pushq	%rcx
 	movl	%r8d, %r9d
 	movl	%edi, %r8d
 	movl	%edx, %ecx
 	movl	$7, %edx
 	movq	%rax, %rdi
 	call	boxfill8
+	addq	$16, %rsp
 .L2:
 	call	_io_hlt
 	jmp	.L2
@@ -235,7 +263,7 @@ init_palette:
 	.cfi_offset 6, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
-	movl	$table_rgb.1307, %edx
+	movl	$table_rgb.1330, %edx
 	movl	$15, %esi
 	movl	$0, %edi
 	call	set_palette
@@ -364,9 +392,9 @@ boxfill8:
 	.size	boxfill8, .-boxfill8
 	.data
 	.align 32
-	.type	table_rgb.1307, @object
-	.size	table_rgb.1307, 48
-table_rgb.1307:
+	.type	table_rgb.1330, @object
+	.size	table_rgb.1330, 48
+table_rgb.1330:
 	.byte	0
 	.byte	0
 	.byte	0
@@ -415,5 +443,5 @@ table_rgb.1307:
 	.byte	-124
 	.byte	-124
 	.byte	-124
-	.ident	"GCC: (GNU) 4.8.2 20140206 (prerelease)"
+	.ident	"GCC: (GNU) 4.9.0"
 	.section	.note.GNU-stack,"",@progbits
