@@ -1,0 +1,137 @@
+[bits 16]
+CYLS	equ 0x0ff0
+LEDS 	equ 0x0ff1			;memory to set parm
+VMODE	equ	0x0ff2
+SCRNX	equ	0x0ff4
+SCRNY	equ	0x0ff6
+VRAM 	equ	0x0ff8
+
+;BOTPAK	EQU		0x00280000		
+;DSKCAC	EQU		0x00100000		
+;DSKCAC0	EQU		0x00008000		
+
+switch_to_pm:
+							;set VIDEO
+							;see http://www.ctyme.com/rbrown.htm
+	mov	al, 0x13
+	mov ah, 0x00
+	int 0x10				; call interrupt to set graphic mode
+						
+	mov byte [VMODE],8
+	mov	word [SCRNX],320
+	mov word [SCRNY],200
+	mov dword [VRAM],0x000a0000 
+
+	mov ah, 0x02
+	int 0x16		; keyboard bios
+	mov [LEDS], al
+
+; PIC init
+	mov al, 0xff
+	out 0x21, al
+	nop
+	out 0xa1, al
+
+	cli				;disable cpu interrupt
+
+;enable A20GATE
+;	call	waitkbdout
+;	mov		al,0xd1
+;	out 	0x64,al
+;	call 	waitkbdout
+;	mov 	al,0xdf
+;	out 	0x60,al
+;	call 	waitkbdout
+
+;toload_gdt:
+	lgdt [gdt_descriptor]
+	
+	mov eax, cr0
+	and eax, 0x7fffffff
+	or 	eax, 0x00000001
+	mov cr0, eax
+
+	;jmp CODE_SEG:init_pm	;flush
+;	jmp init_pm	;flush
+;	JMP		pipelineflush
+
+;[bits 32]
+;	mov ax, 0x00
+;	mov cs, ax
+;	cmp byte [KERNEL_OFFSET], 0xe8
+;	je fin
+
+;pipelineflush:
+;init_pm:
+;	MOV		ESI,KERNEL_OFFSET
+;	MOV		EDI,BOTPAK		
+;	MOV		ECX,512*1024/4
+;	CALL	memcpy
+
+;	cmp byte [BOTPAK], 0xe8
+;	jne fin
+
+;fin:
+;	HLT
+;	jmp fin
+	jmp CODE_SEG:init_pm	;flush
+
+;[bits 16]
+;		cmp byte [BOTPAK], 0xe8
+;		je fin
+
+;		MOV		ESI,0x7c00		
+;		MOV		EDI,DSKCAC		
+;		MOV		ECX,512/4
+;		CALL	memcpy
+;
+;
+;		MOV		ESI,DSKCAC0+512	
+;		MOV		EDI,DSKCAC+512	
+;		MOV		ECX,0
+;		MOV		CL, 10
+;		IMUL	ECX,512*18*2/4	
+;		SUB		ECX,512/4		
+;		CALL	memcpy
+
+
+;	CALL BEGIN_PM			;begin protect mode
+
+;memcpy:
+;		MOV		EAX,[ESI]
+;		ADD		ESI,4
+;		MOV		[EDI],EAX
+;		ADD		EDI,4
+;		SUB		ECX,1
+;		JNZ		memcpy			; 
+;		RET
+
+
+
+; waitkbdout
+;waitkbdout:
+;	in		al,0x64
+;	and		al,0x02
+;	jnz		waitkbdout
+;	ret
+
+[bits 32]
+init_pm:
+	mov ax,DATA_SEG
+	mov ds,ax
+	mov ss,ax
+	mov es,ax 
+	mov fs,ax
+	mov gs,ax
+
+	mov ebp, 0x310000		;stack postion
+	mov esp,ebp
+
+;	jmp KERNEL_OFFSET
+	call BEGIN_PM
+;	cmp byte [BOTPAK], 0xe8
+;	jne fin2
+
+;fin2:
+;	HLT
+;	jmp fin2
