@@ -71,4 +71,4 @@ init_pm:
 	mov ebp, 0x90000		;stack postion
 	mov esp,ebp
 
-	CALL BEGIN_PM			;begin protect mode
+	jmp BEGIN_PM			;begin protect mode
