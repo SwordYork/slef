@@ -10,7 +10,7 @@
 		GLOBAL	_io_load_eflags, _io_store_eflags
 		GLOBAL	_load_gdtr, _load_idtr
 		GLOBAL	_asm_inthandler21, _asm_inthandler27, _asm_inthandler2c
-		EXTERN	_inthandler21, _inthandler27, _inthandler2c
+		EXTERN	inthandler21, inthandler27, inthandler2c
 
 
 [SECTION .text]
@@ -105,7 +105,7 @@ _asm_inthandler21:
 		MOV		AX,SS
 		MOV		DS,AX
 		MOV		ES,AX
-		CALL	_inthandler21
+		CALL	inthandler21
 		POP		EAX
 		POPAD
 		POP		DS
@@ -121,7 +121,7 @@ _asm_inthandler27:
 		MOV		AX,SS
 		MOV		DS,AX
 		MOV		ES,AX
-		CALL	_inthandler27
+		CALL	inthandler27
 		POP		EAX
 		POPAD
 		POP		DS
@@ -137,7 +137,7 @@ _asm_inthandler2c:
 		MOV		AX,SS
 		MOV		DS,AX
 		MOV		ES,AX
-		CALL	_inthandler2c
+		CALL	inthandler2c
 		POP		EAX
 		POPAD
 		POP		DS

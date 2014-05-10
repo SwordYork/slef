@@ -20,14 +20,14 @@ void init_pic(void)
 	return;
 }
 
-void _inthandler21(int *esp)
+void inthandler21(int *esp)
 {
 	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
 	boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 0, 32 * 8 - 1, 15);
 	putfont8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, "INT 21 (IRQ-1) : PS/2 keyboard");
 }
 
-void _inthandler2c(int *esp)
+void inthandler2c(int *esp)
 {
 	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
 	boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 0, 32 * 8 - 1, 15);
@@ -37,7 +37,7 @@ void _inthandler2c(int *esp)
 	}
 }
 
-void _inthandler27(int *esp)
+void inthandler27(int *esp)
 {
 	_io_out8(PIC0_OCW2, 0x67); 
 	return;

@@ -79,9 +79,9 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define ADR_BOOTINFO	0x00000ff0
 /* int.c */
 void init_pic(void);
-void _inthandler21(int *esp);
-void _inthandler27(int *esp);
-void _inthandler2c(int *esp);
+void inthandler21(int *esp);
+void inthandler27(int *esp);
+void inthandler2c(int *esp);
 #define PIC0_ICW1		0x0020
 #define PIC0_OCW2		0x0020
 #define PIC0_IMR		0x0021
