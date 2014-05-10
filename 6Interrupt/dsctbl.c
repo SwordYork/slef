@@ -4,10 +4,13 @@
 #define LIMIT_IDT		0x000007ff
 #define ADR_GDT			0x00270000
 #define LIMIT_GDT		0x0000ffff
-#define ADR_KERNEL		0x0000c400
+#define ADR_KERNEL		0x00000000
+//#define LIMIT_KERNEL	0xffffffff
 #define LIMIT_KERNEL	0x0007ffff
 #define AR_DATA32_RW	0x4092
 #define AR_CODE32_ER	0x409a
+#define AR_INTGATE32	0x008e
+
 
 void init_gdtidt(void)
 {
@@ -15,20 +18,22 @@ void init_gdtidt(void)
 	struct GATE_DESCRIPTOR    *idt = (struct GATE_DESCRIPTOR  *) ADR_IDT;
 	int i;
 
-	/* GDTÌú» */
-	for (i = 0; i < 8192; i++) {
+	for (i = 0; i <= LIMIT_GDT / 8 ; i++) {
 		set_segmdesc(gdt + i, 0, 0, 0);
 	}
-	set_segmdesc(gdt + 1, 0xffffffff, 0x00000000, AR_DATA32_RW);
+	set_segmdesc(gdt + 1, LIMIT_KERNEL, ADR_KERNEL, AR_CODE32_ER);
+	set_segmdesc(gdt + 2, 0xffffffff, 0x00000000, AR_DATA32_RW);
 	//set_segmdesc(gdt + 2, 0x0007ffff, 0x00280000, 0x409a);
-	set_segmdesc(gdt + 2, LIMIT_KERNEL, ADR_KERNEL, AR_CODE32_ER);
 	_load_gdtr(LIMIT_GDT, ADR_GDT);
 
-	/* IDTÌú» */
-	for (i = 0; i < 256; i++) {
+	for (i = 0; i <= LIMIT_IDT / 8; i++) {
 		set_gatedesc(idt + i, 0, 0, 0);
 	}
 	_load_idtr(LIMIT_IDT, ADR_IDT);
+
+	set_gatedesc(idt + 0x21, (int) _asm_inthandler21, 1 * 8, AR_INTGATE32);
+	set_gatedesc(idt + 0x27, (int) _asm_inthandler27, 1 * 8, AR_INTGATE32);
+	set_gatedesc(idt + 0x2c, (int) _asm_inthandler2c, 1 * 8, AR_INTGATE32);
 
 	return;
 }

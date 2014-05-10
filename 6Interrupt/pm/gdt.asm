@@ -5,12 +5,12 @@ gdt_null:
 	dd 0x0
 
 gdt_core:
-	dw 0xffff
-	dw 0x0
-	db 0x0
-	db 10011010b
+	dw 0xffff			;0:15 limit
+	dw 0x0 				;15:00 Base 1
+	db 0x0 				;16:23 Base 2
+	db 10011010b		;      Type
 	db 11001111b		;code seg
-	db 0x0
+	db 0x0				;24:31 Base 3
 ;	dw	0xffff,0x0000,0x9a00,0x0047
 
 gdt_data:

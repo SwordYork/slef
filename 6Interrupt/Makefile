@@ -14,7 +14,7 @@ kernel.sys: kernel_entry.o asmfunc.o kernel.o
 	ld -o $@ $(LD_ARCH) $(KERNEL_OFFSET) $(LD_FORMAT) $^
 	#ld -o $@ $(LD_ARCH) /lib/libc.so $(KERNEL_OFFSET) $(LD_FORMAT) $^
 
-kernel.o: graphic.o dsctbl.o init.o
+kernel.o: graphic.o dsctbl.o init.o int.o
 	ld -o $@ $(LD_ARCH) -r $^  
  
 %.o: %.c

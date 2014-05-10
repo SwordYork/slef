@@ -29,6 +29,10 @@ int _io_load_eflags(void);
 void _io_store_eflags(int eflags);
 void _load_gdtr(short t, int addr);
 void _load_idtr(short t, int addr);
+void _asm_inthandler21(void);
+void _asm_inthandler27(void);
+void _asm_inthandler2c(void);
+
 
 
 
@@ -69,11 +73,24 @@ struct GATE_DESCRIPTOR {
 void init_gdtidt(void);
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
 void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
-void load_gdtr(int limit, int addr);
-void load_idtr(int limit, int addr);
-
 
 
 
 #define ADR_BOOTINFO	0x00000ff0
-
+/* int.c */
+void init_pic(void);
+void _inthandler21(int *esp);
+void _inthandler27(int *esp);
+void _inthandler2c(int *esp);
+#define PIC0_ICW1		0x0020
+#define PIC0_OCW2		0x0020
+#define PIC0_IMR		0x0021
+#define PIC0_ICW2		0x0021
+#define PIC0_ICW3		0x0021
+#define PIC0_ICW4		0x0021
+#define PIC1_ICW1		0x00a0
+#define PIC1_OCW2		0x00a0
+#define PIC1_IMR		0x00a1
+#define PIC1_ICW2		0x00a1
+#define PIC1_ICW3		0x00a1
+#define PIC1_ICW4		0x00a1
