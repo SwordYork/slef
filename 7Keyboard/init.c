@@ -37,14 +37,15 @@ void main(){
 	_io_out8(PIC1_IMR,0xef);
 
 	char i;
+	int j;
 	for(;;){
 		_io_cli();
-		if(keybuf.flag == 0) {
+		if(keybuf.next_r == keybuf.next_w) {
 			_io_stihlt();
 		}
 		else{
-			i = keybuf.data;
-			keybuf.flag = 0;
+			i = keybuf.data[keybuf.next_r];
+			keybuf.next_r =  (keybuf.next_r +1 ) % KEYBUF_LEN;
 			_io_sti();
 			char2hex(s, i , 4);	
 			boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);

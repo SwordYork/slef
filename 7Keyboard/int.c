@@ -3,7 +3,7 @@
 
 
 
-struct KEYBUF keybuf;
+struct KEYBUF keybuf = {.data = "0", .next_r = 0, .next_w = 0};
 
 void init_pic(void)
 {
@@ -33,9 +33,9 @@ void inthandler21(int *esp)
 	_io_out8(PIC0_OCW2, 0x61);
 	data = _io_in8(PORT_KEYDAT);
 
-	if (keybuf.flag == 0){
-		keybuf.data = data;
-		keybuf.flag = 1;
+	if ( (keybuf.next_w + 1) % KEYBUF_LEN < keybuf.next_r || keybuf.next_w >= keybuf.next_r ){
+		keybuf.data[keybuf.next_w] = data;
+		keybuf.next_w = (keybuf.next_w  + 1) % KEYBUF_LEN;
 	}
 //	char2hex(s, data, 4);	
 //	boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);

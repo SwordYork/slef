@@ -102,7 +102,9 @@ void inthandler2c(int *esp);
 #define PIC1_ICW3		0x00a1
 #define PIC1_ICW4		0x00a1
 
+#define KEYBUF_LEN		32
 struct KEYBUF {
-	unsigned char data, flag;
+	unsigned char data[KEYBUF_LEN];
+	int next_r, next_w;
 };
 #endif
