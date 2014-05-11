@@ -13,7 +13,7 @@ slef.img: boot.img kernel.sys
 kernel.sys: kernel_entry.o asmfunc.o kernel.o 
 	ld -o $@ $(LD_ARCH) $(KERNEL_OFFSET) $(LD_FORMAT) $^
 
-kernel.o: graphic.o dsctbl.o init.o int.o itoa.o
+kernel.o: graphic.o dsctbl.o init.o int.o itoa.o fifo.o
 	ld -o $@ $(LD_ARCH) -r $^  
  
 %.o: %.c

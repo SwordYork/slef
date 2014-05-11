@@ -103,8 +103,14 @@ void inthandler2c(int *esp);
 #define PIC1_ICW4		0x00a1
 
 #define KEYBUF_LEN		32
-struct KEYBUF {
-	unsigned char data[KEYBUF_LEN];
-	int next_r, next_w;
+#define MOUSEBUF_LEN		128
+struct  FIFO8 {
+	unsigned char *buf;
+	int p, q, size, free, flags;
 };
+void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);
+int fifo8_put(struct FIFO8 *fifo, unsigned char data);
+int fifo8_get(struct FIFO8 *fifo);
+int fifo8_status(struct FIFO8* fifo);
+
 #endif
