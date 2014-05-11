@@ -25,6 +25,7 @@ void main(){
 
 	struct MOUSE_DEC mdec;
 
+
 	int j;
 
 	int mx,my;
