@@ -1,6 +1,7 @@
 #include "kernel.h"
 
 #define MAX_LENGTH 		40
+extern struct KEYBUF keybuf;
 
 
 void main(){
@@ -34,9 +35,22 @@ void main(){
 
 	_io_out8(PIC0_IMR,0xf9);
 	_io_out8(PIC1_IMR,0xef);
-	
+
+	char i;
 	for(;;){
-		_io_hlt();
+		_io_cli();
+		if(keybuf.flag == 0) {
+			_io_stihlt();
+		}
+		else{
+			i = keybuf.data;
+			keybuf.flag = 0;
+			_io_sti();
+			char2hex(s, i , 4);	
+			boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
+			putfont8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+
+		}
 	}
 }	
 

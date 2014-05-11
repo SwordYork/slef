@@ -1,5 +1,10 @@
 #include "kernel.h"
 #define PORT_KEYDAT		0x0060
+
+
+
+struct KEYBUF keybuf;
+
 void init_pic(void)
 {
 	_io_out8(PIC0_IMR,  0xff  ); 
@@ -27,9 +32,15 @@ void inthandler21(int *esp)
 	unsigned char data, s[4];
 	_io_out8(PIC0_OCW2, 0x61);
 	data = _io_in8(PORT_KEYDAT);
-	char2hex(s, data, 4);	
-	boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
-	putfont8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+
+	if (keybuf.flag == 0){
+		keybuf.data = data;
+		keybuf.flag = 1;
+	}
+//	char2hex(s, data, 4);	
+//	boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
+//	putfont8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+ 	return ;
 }
 
 void inthandler2c(int *esp)
