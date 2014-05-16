@@ -1,0 +1,13 @@
+# System configuration.
+romimage: file=$BXSHARE/BIOS-bochs-latest
+vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
+megs: 32
+
+# Hard disks.
+ata0-master: type=disk, path="../bochs/c.img", cylinders=2080, heads=16, spt=63
+display_library:     x, options="gui_debug"
+
+mouse: type=imps2, enabled=1
+
+floppya: 1_44="boot.img", status=inserted
+boot: floppy 
