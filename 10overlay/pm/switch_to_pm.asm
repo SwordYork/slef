@@ -13,10 +13,10 @@ switch_to_pm:
 ;	mov	al, 0x13
 ;	mov ah, 0x00
 ;	int 0x10				; call interrupt to set graphic mode
-;						
+						
 ;	mov byte [VMODE],8
-;	mov	word [SCRNX],640
-;	mov word [SCRNY],400
+;	mov	word [SCRNX],320
+;	mov word [SCRNY],200
 ;	mov dword [VRAM],0x000a0000 
 
 		MOV		AX,0x9000

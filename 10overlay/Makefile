@@ -31,4 +31,4 @@ asmfunc.o: asmfunc.asm
 	nasm $< $(NASM_ARCH) -o $@
 
 clean:
-	rm *.sys *.o *.img
+	rm *.img *.sys *.o 
