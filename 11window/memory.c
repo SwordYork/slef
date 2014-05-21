@@ -110,7 +110,7 @@ unsigned int memtest(unsigned int start, unsigned int end){
 		_store_cr0(cr0);
 	}
 
-	i = memtest_sub(start,end);
+	i = _memtest_sub(start,end);
 
 	if(flg486 != 0){
 		cr0 = _load_cr0();

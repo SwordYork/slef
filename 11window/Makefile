@@ -2,7 +2,7 @@ KERNEL_OFFSET=-Ttext 0xc400
 LD_ARCH=-m elf_i386
 LD_FORMAT=--oformat binary
 NASM_ARCH=-f elf32
-GCC_ARCH=-m32
+GCC_ARCH=-m32 -O1
 GCC_FLAG=-ffreestanding
 
 all: slef.img
