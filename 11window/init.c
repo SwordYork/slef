@@ -24,10 +24,14 @@ void main(){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	unsigned int memtotal;
 
+	unsigned int count = 0;
+
 	// overlay control
 	struct SHTCTL *shtctl;
 	struct SHEET *sht_back, *sht_mouse;
+	struct SHEET *sht_win;
 	unsigned char *buf_back, buf_mouse[256];
+	unsigned char *buf_win;
 
 	// gdt control
 	init_gdtidt();
@@ -59,13 +63,20 @@ void main(){
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
 	sht_back = sheet_alloc(shtctl);			// background sheet
 	sht_mouse = sheet_alloc(shtctl);		// mouse sheet
+	sht_win = sheet_alloc(shtctl);
+
 	buf_back = (unsigned char *) memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);		// background buffer
+	buf_win = (unsigned char *) memman_alloc_4k(memman,160*52);
+
+
 	sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1);	// bind buf
 	sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);
+	sheet_setbuf(sht_win, buf_win, 160, 52, -1);
 
 	init_screen(buf_back, binfo->scrnx, binfo->scrny);	// init color
 	//init_mouse_cursor8(mcursor, COL8_008484);
 	init_mouse_cursor8(buf_mouse, 99);
+	make_window8(buf_win, 160, 52, "counter");
 
 	// init slide
 	sheet_slide(sht_back, 0, 0);
@@ -78,9 +89,11 @@ void main(){
 	// init mouse slide
 	// init position 0,0
 	sheet_slide(sht_mouse, mx, my);
-	sheet_updown(sht_back, 0);
-	sheet_updown(sht_mouse, 1);
+	sheet_slide(sht_win,80,72);
 
+	sheet_updown(sht_back, 0);
+	sheet_updown(sht_win, 1);
+	sheet_updown(sht_mouse, 2);
 
 	/***************  memory info  *********/
 	itoa(s,memtotal / 1024 /1024,MAX_LENGTH);
@@ -94,6 +107,12 @@ void main(){
 
 
 	for(;;){
+		count ++;
+		itoa(s,count,MAX_LENGTH);
+		boxfill8(buf_win, 160, COL8_C6C6C6, 40, 28,119, 43);
+		putfont8_asc(buf_win, 160, 40, 28, COL8_000000, s);
+		sheet_refresh(sht_win, 40, 28, 120, 44);
+
 		_io_cli();
 		if(0 == (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) ) ) {
 			_io_stihlt();
