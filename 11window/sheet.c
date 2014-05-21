@@ -10,6 +10,11 @@ struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize
 		return ctl;
 	}
 
+	ctl->map = (unsigned char *) memman_alloc_4k(memman,xsize*ysize);
+	if(ctl->map == 0){
+		memman_free_4k(memman, (int) ctl, sizeof(struct SHTCTL));
+		return ctl;
+	}
 	// set VRAM
 	ctl->vram = vram;
 	ctl->xsize = xsize;
@@ -76,6 +81,8 @@ void sheet_updown(struct SHEET *sht, int height)
 				ctl->sheets[h]->height = h;
 			}
 			ctl->sheets[height] = sht;
+			sheet_refreshmap(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, height + 1);			
+		sheet_refreshsub(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize,height + 1,old);
 		} else {	
 			// the sheet is hidden
 			if (ctl->top > old) {
@@ -85,9 +92,11 @@ void sheet_updown(struct SHEET *sht, int height)
 				}
 			}
 			ctl->top--;
+			sheet_refreshmap(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, 0);
+			
+		sheet_refreshsub(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize,0, old -1);
 		}
 		//refresh the origin position
-		sheet_refreshsub(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize);
 	} else if (old < height) {	
 		// the sheet become lower
 		if (old >= 0) {
@@ -104,7 +113,8 @@ void sheet_updown(struct SHEET *sht, int height)
 			ctl->sheets[height] = sht;
 			ctl->top++; 
 		}
-		sheet_refreshsub(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize);
+		sheet_refreshmap(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, height);		
+		sheet_refreshsub(ctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize,height, height);
 	}
 	return;
 }
@@ -113,7 +123,7 @@ void sheet_updown(struct SHEET *sht, int height)
 void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bx1, int by1)
 {
 	if (sht->height >= 0) { 
-		sheet_refreshsub(sht->ctl, sht->vx0 + bx0, sht->vy0 + by0, sht->vx0 + bx1, sht->vy0 + by1);
+		sheet_refreshsub(sht->ctl, sht->vx0 + bx0, sht->vy0 + by0, sht->vx0 + bx1, sht->vy0 + by1,sht->height, sht->height);
 	}
 	return;
 }
@@ -121,6 +131,7 @@ void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bx1, int by1)
 
 void sheet_slide(struct SHEET *sht, int vx0, int vy0){
 	int old_vx0 = sht->vx0, old_vy0 = sht->vy0;	
+	struct SHTCTL *ctl = sht->ctl;
 	sht->vx0 = vx0;
 	sht->vy0 = vy0;
 
@@ -129,8 +140,10 @@ void sheet_slide(struct SHEET *sht, int vx0, int vy0){
 	// 1. move origin position layer
 	// 2. add new position layer
 	if(sht->height >= 0){
-		sheet_refreshsub(sht->ctl, old_vx0, old_vy0, old_vx0 + sht->bxsize, old_vy0 + sht->bysize);
-		sheet_refreshsub(sht->ctl, vx0, vy0, vx0 + sht->bxsize, vy0 + sht->bysize);
+			sheet_refreshmap(ctl, old_vx0, old_vy0, old_vx0 + sht->bxsize, old_vy0 + sht->bysize, 0);
+		sheet_refreshmap(ctl, vx0, vy0, vx0 + sht->bxsize, vy0 + sht->bysize, sht->height);
+		sheet_refreshsub(sht->ctl, old_vx0, old_vy0, old_vx0 + sht->bxsize, old_vy0 + sht->bysize,0,sht->height-1);
+		sheet_refreshsub(sht->ctl, vx0, vy0, vx0 + sht->bxsize, vy0 + sht->bysize,sht->height, sht->height);
 
 	}
 	return;
@@ -146,11 +159,12 @@ void sheet_free(struct SHEET *sht){
 }
 
 
-void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1)
+void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1, int h0, int h1)
 {
 	int h, bx, by, vx, vy, bx0, by0, bx1, by1;
-	unsigned char *buf, c, *vram = ctl->vram;
+	unsigned char *buf, c, *vram = ctl->vram, *map = ctl->map;
 	struct SHEET *sht;
+	unsigned char sid;
 	// from bottom to top
 	// draw sheets
 	if(vx0 < 0){vx0 = 0;}
@@ -158,9 +172,10 @@ void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1)
 	if(vx1 > ctl->xsize){vx1 = ctl->xsize;}
 	if(vy1 > ctl->ysize){vy1 = ctl->ysize;}
 
-	for (h = 0; h <= ctl->top; h++) {
+	for (h = h0; h <= ctl->top; h++) {
 		sht = ctl->sheets[h];
 		buf = sht->buf;
+		sid = sht - ctl->sheets0;
 		bx0 = vx0 - sht->vx0;
 		by0 = vy0 - sht->vy0;
 		bx1 = vx1 - sht->vx0;
@@ -175,9 +190,46 @@ void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1)
 			vy = sht->vy0 + by;
 			for (bx = bx0; bx < bx1; bx++) {
 				vx = sht->vx0 + bx;
-				c = buf[by * sht->bxsize + bx];	// the corresponding layer color
-				if (c != sht->col_inv) {		// visible , then set color
-					vram[vy * ctl->xsize + vx] = c;
+				for (bx = bx0; bx < bx1; bx++) {
+					vx = sht->vx0 + bx;
+					if (map[vy * ctl->xsize + vx] == sid) {
+						vram[vy * ctl->xsize + vx] = buf[by * sht->bxsize + bx];
+					}
+				}
+			}
+		}
+	}
+	return;
+}
+
+// same as sheet_refreshsub
+void sheet_refreshmap(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1, int h0)
+{
+	int h, bx, by, vx, vy, bx0, by0, bx1, by1;
+	unsigned char *buf, sid, *map = ctl->map;
+	struct SHEET *sht;
+	if (vx0 < 0) { vx0 = 0; }
+	if (vy0 < 0) { vy0 = 0; }
+	if (vx1 > ctl->xsize) { vx1 = ctl->xsize; }
+	if (vy1 > ctl->ysize) { vy1 = ctl->ysize; }
+	for (h = h0; h <= ctl->top; h++) {
+		sht = ctl->sheets[h];
+		sid = sht - ctl->sheets0; 
+		buf = sht->buf;
+		bx0 = vx0 - sht->vx0;
+		by0 = vy0 - sht->vy0;
+		bx1 = vx1 - sht->vx0;
+		by1 = vy1 - sht->vy0;
+		if (bx0 < 0) { bx0 = 0; }
+		if (by0 < 0) { by0 = 0; }
+		if (bx1 > sht->bxsize) { bx1 = sht->bxsize; }
+		if (by1 > sht->bysize) { by1 = sht->bysize; }
+		for (by = by0; by < by1; by++) {
+			vy = sht->vy0 + by;
+			for (bx = bx0; bx < bx1; bx++) {
+				vx = sht->vx0 + bx;
+				if (buf[by * sht->bxsize + bx] != sht->col_inv) {
+					map[vy * ctl->xsize + vx] = sid;
 				}
 			}
 		}
