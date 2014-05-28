@@ -222,13 +222,25 @@ struct SHTCTL {
 	struct SHEET sheets0[MAX_SHEETS];
 };
 
+// init shtctl memory and size
 struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize, int ysize);
+// point to specific sheet in shtctl
 struct SHEET *sheet_alloc(struct SHTCTL *ctl);
+// point memory to allocated sheet memory
+// set coordinate
 void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize, int col_inv);
+// adjust relative position
+// there sht's height is change
 void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height);
+// the layer is moving 
+// and to refresh
 void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0);
+// just set flag to 0
+// memory may leak
 void sheet_free(struct SHTCTL *ctl, struct SHEET *sht);
+// refresh only some area for speed
 void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1);
+// refresh background and char
 void sheet_refresh(struct SHTCTL *ctl, struct SHEET *sht, int bx0, int by0, int bx1, int by1);
 
 
