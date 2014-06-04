@@ -238,6 +238,7 @@ void sheet_free(struct SHEET *sht);
 void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1, int h0, int h1);
 void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bx1, int by1);
 void sheet_refreshmap(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1, int h0);
+void  putfont8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);
 
 /*
  * timer.c
@@ -252,12 +253,16 @@ struct TIMER {
 };
 
 struct TIMERCTL {
-	unsigned int count;
-	struct TIMER timer[MAX_TIMER];
+	unsigned int count, next, using_num;
+	struct TIMER *timers[MAX_TIMER];
+	struct TIMER timers0[MAX_TIMER];
 };
 
 void init_pit(void);
-void settimer(unsigned int timeout, struct FIFO8 *fifo, unsigned char data);
+struct TIMER *timer_alloc(void);
+void timer_free(struct TIMER *timer);
+void timer_init(struct TIMER *timer, struct FIFO8 *fifo, unsigned char data);
+void timer_settime(struct TIMER *timer, unsigned int timeout);
 
 
 #endif
