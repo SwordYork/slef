@@ -13,6 +13,7 @@ void init_pit(void){
 	_io_out8(PIT_CNT0, 0x2e);
 	timerctl.count = 0;
 	timerctl.next_time = 0xffffffff;
+	timerctl.using_num = 0;
 	for (i = 0; i < MAX_TIMER; i++){
 		timerctl.timers0[i].flags = 0;
 	}
@@ -21,27 +22,30 @@ void init_pit(void){
 
 void inthandler20(int *esp){
 	int i,j;
+	struct TIMER *timer;
+
 	_io_out8(PIC0_OCW2, 0x60);
 	timerctl.count ++;
 	if(timerctl.next_time > timerctl.count){
 		return;
 	}
-	timerctl.next_time = 0xffffffff;
+	timer = timerctl.t0;
 	for (i = 0; i < timerctl.using_num; i++){
-		if (timerctl.timers[i]->timeout > timerctl.count){
+		if (timer->timeout > timerctl.count){
 			/* time out all done*/
 			break;
 		}
-		timerctl.timers[i]->flags == TIMER_FLAGS_ALLOC;
-		fifo32_put(timerctl.timers[i]->fifo, timerctl.timers[i]->data);
+		timer->flags == TIMER_FLAGS_ALLOC;
+		fifo32_put(timer->fifo, timer->data);
+		// find last timer
+		timer = timer->next_timer;
 	}
 	timerctl.using_num -= i;
-	for( j = 0; j < timerctl.using_num; j ++ ){
-		timerctl.timers[j] = timerctl.timers[i + j];
-	}
-
-	if(timerctl.using_num > 0){
-		timerctl.next_time = timerctl.timers[0]->timeout;
+	
+	// next_timer setting
+	timerctl.t0 = timer;		// the lastest timer
+	if( 0 < timerctl.using_num){
+		timerctl.next_time = timerctl.t0 -> timeout;
 	}
 	else{
 		timerctl.next_time = 0xffffffff;
@@ -90,25 +94,50 @@ void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data){
 
 // set timer out
 void timer_settime(struct TIMER *timer, unsigned int timeout){
-	int e,i,j;
+	int e;
+	struct TIMER *t,*s;
 	timer->timeout = timeout + timerctl.count;
 	timer->flags = TIMER_FLAGS_USING;
 	e = _io_load_eflags();
 	_io_cli();
+	timerctl.using_num ++;
 
-	for( i = 0; i < timerctl.using_num; ++i){
-		if(timerctl.timers[i] -> timeout >= timer->timeout){
+	// only one timer
+	if( 1 == timerctl.using_num){
+		timerctl.t0 = timer;
+		timer->next_timer = 0;
+		timerctl.next_time = timer->timeout;
+		_io_store_eflags(e);
+		return;
+	}
+
+	t = timerctl.t0;
+	if(timer->timeout < t->timeout){
+		timerctl.t0 = timer;
+		timer->next_timer = t;
+		timerctl.next_time = timer->timeout;
+		_io_store_eflags(e);
+		return;
+	}
+
+	for (;;){
+		s = t;
+		t = t->next_timer;
+		if(t == 0){
 			break;
 		}
-	}
-	for (j = timerctl.using_num;j>i;j--){
-		timerctl.timers[j] = timerctl.timers[j-1];
+
+		if(timer->timeout < t->timeout){
+			s->next_timer = timer;
+			timer->next_timer = t;
+			_io_store_eflags(e);
+			return;
+		}
 	}
 
-	timerctl.using_num ++;
-	
-	timerctl.timers[i] = timer;
-	timerctl.next_time = timerctl.timers[0]->timeout;
+	// last one
+	s->next_timer = timer;
+	timer->next_timer = 0;
 	_io_store_eflags(e);
 	return;
 }

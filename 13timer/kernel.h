@@ -255,13 +255,14 @@ void  putfont8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, i
 #define TIMER_FLAGS_USING	2
 struct TIMER {
 	unsigned int timeout, flags;
+	struct TIMER *next_timer;
 	struct FIFO32 *fifo;
 	int data;
 };
 
 struct TIMERCTL {
 	unsigned int count, next_time, using_num;
-	struct TIMER *timers[MAX_TIMER];
+	struct TIMER *t0;
 	struct TIMER timers0[MAX_TIMER];
 };
 
