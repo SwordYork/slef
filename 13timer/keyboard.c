@@ -1,6 +1,7 @@
 #include "kernel.h"
 
-struct FIFO8 keyfifo;
+struct FIFO32 *keyfifo;
+int keydata0;
 
 
 void wait_KBC_sendready(void)
@@ -14,8 +15,10 @@ void wait_KBC_sendready(void)
 	return;
 }
 
-void init_keyboard(void)
+void init_keyboard(struct FIFO32* fifo, int data0)
 {
+	keyfifo = fifo;
+	keydata0 = data0;
 	wait_KBC_sendready();
 	_io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE);
 	wait_KBC_sendready();
@@ -25,15 +28,11 @@ void init_keyboard(void)
 
 void inthandler21(int *esp)
 {
-	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
-	unsigned char data, s[4];
+	int data;
 	_io_out8(PIC0_OCW2, 0x61);
 	data = _io_in8(PORT_KEYDAT);
 
-	fifo8_put(&keyfifo, data);
-//	char2hex(s, data, 4);	
-//	boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
-//	putfont8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+	fifo32_put(keyfifo, data + keydata0);
  	return ;
 }
 

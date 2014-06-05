@@ -1,9 +1,12 @@
 #include "kernel.h"
 
-struct FIFO8 mousefifo;
+struct FIFO32 *mousefifo;
+int mousedata0;
 
-void enable_mouse(struct MOUSE_DEC *mdec)
+void enable_mouse(struct FIFO32* fifo, int data0, struct MOUSE_DEC *mdec)
 {
+	mousefifo = fifo;
+	mousedata0 = data0;
 //	enable mouse
 	wait_KBC_sendready();
 	_io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
@@ -55,10 +58,10 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat){
 
 void inthandler2c(int *esp)
 {
-	unsigned char data;
+	int data;
 	_io_out8(PIC1_OCW2, 0x64);
 	_io_out8(PIC0_OCW2, 0x62);
 	data = _io_in8(PORT_KEYDAT);
-	fifo8_put(&mousefifo, data);
+	fifo32_put(mousefifo, data + mousedata0);
 	return;
 }

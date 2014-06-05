@@ -1,25 +1,22 @@
 #include "kernel.h"
 #define MAX_LENGTH 		40
 
-extern struct FIFO8 keyfifo;
-extern struct FIFO8 mousefifo;
 extern struct TIMERCTL timerctl;
 
 void main(){
 	struct BOOTINFO *binfo;
+	struct FIFO32 fifo;
 	binfo = (struct BOOTINFO *) ADR_BOOTINFO;
 
 	char s[MAX_LENGTH];
 	char mcursor[256];
 
 	// mouse and keyboard data
-	char keybuf[KEYBUF_LEN];
-	char mousebuf[MOUSEBUF_LEN];
-	char timerbuf[8],timerbuf2[8], timerbuf3[8];
+	int fifobuf[BUF_LEN];
 
 	struct TIMER *timer, *timer2, *timer3;
 
-	unsigned char fifo_data;
+	int fifo_data;
 	struct MOUSE_DEC mdec;
 	int mx,my;
 
@@ -27,7 +24,6 @@ void main(){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	unsigned int memtotal;
 
-	unsigned int count = 0;
 
 	// overlay control
 	struct SHTCTL *shtctl;
@@ -43,45 +39,44 @@ void main(){
 	_io_sti();
 
 	// init fifo
-	fifo8_init(&keyfifo, KEYBUF_LEN, keybuf);
-	fifo8_init(&mousefifo, MOUSEBUF_LEN , mousebuf);
+	fifo32_init(&fifo, BUF_LEN, fifobuf);
 
-	struct FIFO8 timerfifo;
-	fifo8_init(&timerfifo, 8, timerbuf);
+	init_keyboard(&fifo, 256);
+	enable_mouse(&fifo, 512, &mdec);
+
 	timer = timer_alloc();
-	timer_init(timer, &timerfifo, 10);
+	timer_init(timer, &fifo, 10);
 	timer_settime(timer, 1000);
 
 
 	timer2 = timer_alloc();
-	timer_init(timer2, &timerfifo, 3);
+	timer_init(timer2, &fifo, 3);
 	timer_settime(timer2, 300);
 	
 	timer3 = timer_alloc();
-	timer_init(timer3,&timerfifo, 1);
+	timer_init(timer3,&fifo, 1);
 	timer_settime(timer3, 50);
 
 
 	// must after init pit
 	// qemu 1000 = 10s
 	// bochs 1000 = 1s
-	//settimer(10000, &timerfifo, 1);
 	_io_out8(PIC0_IMR,0xf8);
 	_io_out8(PIC1_IMR,0xef);
 
 	// mouse and keyboard control
-	init_keyboard();
-	enable_mouse(&mdec);
 
 	// memory set
 	memtotal = memtest(0x00400000, 0xbfffffff);
 	memman_init(memman);
 	// this is ERROR!
 	// c400 is system
-//	memman_free(memman, 0x00001000, 0x0009e000); /* 0x00001000 - 0x0009efff */
 	memman_free(memman, 0x00400000, memtotal - 0x00400000);
 
 
+	/**************************************************
+	 *  screen 
+	 *  ----------------------------------------------*/
 	// video initialize
 	init_palette();
 
@@ -118,8 +113,12 @@ void main(){
 	sheet_updown(sht_back, 0);
 	sheet_updown(sht_win, 1);
 	sheet_updown(sht_mouse, 2);
+	/*-------------------------------------------------
+	 *  screen 
+	 *  ***********************************************/
 
 	/***************  memory info  *********/
+	/*  
 	itoa(s,memtotal / 1024 /1024,MAX_LENGTH);
 	putfont8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 
@@ -127,33 +126,31 @@ void main(){
 	putfont8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, s);
 
 	sheet_refresh(sht_back, 0, 32, binfo->scrnx, 80);
+	*/
 	/***************  memory info  *********/
 
 
 	for(;;){
-		count ++;
 //		itoa(s,count,MAX_LENGTH);
 		itoa(s,timerctl.count,MAX_LENGTH);
-
 		putfont8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 6);
 		_io_cli();
-		if(0 == (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo))){
-//		if(0 == (fifo8_status(&keyfifo) + fifo8_status(&mousefifo)) ) {
+		if(0 == (fifo32_status(&fifo) )){
 			_io_stihlt(); 
 		}
 		else{
-			if(fifo8_status(&keyfifo) != 0){
-				fifo_data = fifo8_get(&keyfifo);
-				_io_sti();
-		//		char2hex(s, key_data , 4);	
-		//		boxfill8(buf_back, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
-		//		putfont8_asc(buf_back, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
-		//		sheet_refresh(sht_back, 0, 16, 16, 32);
+			fifo_data = fifo32_get(&fifo);
+		//	itoa(s, fifo_data , MAX_LENGTH);	
+		//	putfont8_asc_sht(sht_back, 200, 160, COL8_FFFFFF, COL8_008484, s, 14);
+			_io_sti();
+			if(256 <= fifo_data && fifo_data < 512){ // keyboard data
+				fifo_data -= 256;
+				char2hex(s, fifo_data , 4);	
+				putfont8_asc_sht(sht_back, 200, 160, COL8_FFFFFF, COL8_008484, s, 4);
 			}
-			else if(fifo8_status(&mousefifo) != 0){
-				fifo_data = fifo8_get(&mousefifo);
-				_io_sti();
-				if (mouse_decode(&mdec,fifo_data) != 0){
+			else if(512 <= fifo_data && fifo_data < 768){ // mouse data
+				// fifo_data -= 512; 	//have some error
+				if (mouse_decode(&mdec,fifo_data - 512) != 0){
 					mx += mdec.x;
 					my += mdec.y;
 					if(mx < 0){
@@ -172,34 +169,25 @@ void main(){
 				}
 
 			}
-			else if (fifo8_status(&timerfifo) != 0){
-				fifo_data = fifo8_get(&timerfifo);
-				_io_sti();
-				if( fifo_data == 10){
-					itoa(s,count,MAX_LENGTH);
-					putfont8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 10);
-
-					putfont8_asc_sht(sht_back, 0, 140, COL8_FFFFFF, COL8_008484,"10[sec]", 7);
+			else if( fifo_data == 10){
+				putfont8_asc_sht(sht_back, 0, 140, COL8_FFFFFF, COL8_008484,"10[sec]", 7);
 				}
-				else if( fifo_data == 3){
-					putfont8_asc_sht(sht_back, 100, 0, COL8_FFFFFF, COL8_008484,"3[sec]", 6);
-					count = 0;
+			else if( fifo_data == 3){
+				putfont8_asc_sht(sht_back, 100, 0, COL8_FFFFFF, COL8_008484,"3[sec]", 6);
+			}
+			else{
+				if(fifo_data != 0){
+					timer_init(timer3, &fifo, 0);
+					boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
 				}
 				else{
-					if(fifo_data != 0){
-						timer_init(timer3, &timerfifo, 0);
-						boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
-					}
-					else{
-						timer_init(timer3, &timerfifo, 1);
-						boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
-					}
-					timer_settime(timer3, 50);
-					sheet_refresh(sht_back, 8, 96, 16, 112);
+					timer_init(timer3, &fifo, 1);
+					boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
 				}
-
+				timer_settime(timer3, 50);
+				sheet_refresh(sht_back, 8, 96, 16, 112);
 			}
-			
+
 		}
-	}
-}	
+	}	
+}
