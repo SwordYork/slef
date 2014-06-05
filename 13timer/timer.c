@@ -8,15 +8,22 @@ struct TIMERCTL timerctl;
 // bochs is 10x than qemu
 void init_pit(void){
 	int i;
+	struct TIMER *t;
+
 	_io_out8(PIT_CTRL, 0x36);
 	_io_out8(PIT_CNT0, 0x9c);
 	_io_out8(PIT_CNT0, 0x2e);
 	timerctl.count = 0;
 	timerctl.next_time = 0xffffffff;
-	timerctl.using_num = 0;
 	for (i = 0; i < MAX_TIMER; i++){
 		timerctl.timers0[i].flags = 0;
 	}
+	t = timer_alloc();
+	t->timeout = 0xffffffff;
+	t->flags = TIMER_FLAGS_USING;
+	t->next_timer = 0x00;
+	timerctl.t0 = t;
+	timerctl.next_time = 0xffffffff;
 	return;
 }
 
@@ -30,7 +37,7 @@ void inthandler20(int *esp){
 		return;
 	}
 	timer = timerctl.t0;
-	for (i = 0; i < timerctl.using_num; i++){
+	for (;;){
 		if (timer->timeout > timerctl.count){
 			/* time out all done*/
 			break;
@@ -40,16 +47,10 @@ void inthandler20(int *esp){
 		// find last timer
 		timer = timer->next_timer;
 	}
-	timerctl.using_num -= i;
 	
 	// next_timer setting
 	timerctl.t0 = timer;		// the lastest timer
-	if( 0 < timerctl.using_num){
-		timerctl.next_time = timerctl.t0 -> timeout;
-	}
-	else{
-		timerctl.next_time = 0xffffffff;
-	}
+	timerctl.next_time = timerctl.t0 -> timeout;
 
 	return;
 }
@@ -100,16 +101,7 @@ void timer_settime(struct TIMER *timer, unsigned int timeout){
 	timer->flags = TIMER_FLAGS_USING;
 	e = _io_load_eflags();
 	_io_cli();
-	timerctl.using_num ++;
 
-	// only one timer
-	if( 1 == timerctl.using_num){
-		timerctl.t0 = timer;
-		timer->next_timer = 0;
-		timerctl.next_time = timer->timeout;
-		_io_store_eflags(e);
-		return;
-	}
 
 	t = timerctl.t0;
 	if(timer->timeout < t->timeout){
@@ -134,12 +126,6 @@ void timer_settime(struct TIMER *timer, unsigned int timeout){
 			return;
 		}
 	}
-
-	// last one
-	s->next_timer = timer;
-	timer->next_timer = 0;
-	_io_store_eflags(e);
-	return;
 }
 
 

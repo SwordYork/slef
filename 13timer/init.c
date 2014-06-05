@@ -129,14 +129,18 @@ void main(){
 	*/
 	/***************  memory info  *********/
 
+	int count = 0;
 
 	for(;;){
 //		itoa(s,count,MAX_LENGTH);
-		itoa(s,timerctl.count,MAX_LENGTH);
-		putfont8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 6);
+		count ++;
+		//itoa(s,timerctl.count,MAX_LENGTH);
+	//	itoa(s,count,MAX_LENGTH);
+	//	putfont8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 6);
 		_io_cli();
 		if(0 == (fifo32_status(&fifo) )){
-			_io_stihlt(); 
+			_io_sti(); 
+			//_io_stihlt(); 
 		}
 		else{
 			fifo_data = fifo32_get(&fifo);
@@ -171,9 +175,12 @@ void main(){
 			}
 			else if( fifo_data == 10){
 				putfont8_asc_sht(sht_back, 0, 140, COL8_FFFFFF, COL8_008484,"10[sec]", 7);
+				itoa(s,count,MAX_LENGTH);
+				putfont8_asc_sht(sht_back, 40, 28, COL8_000000, COL8_C6C6C6, s, 6);
 				}
 			else if( fifo_data == 3){
 				putfont8_asc_sht(sht_back, 100, 0, COL8_FFFFFF, COL8_008484,"3[sec]", 6);
+				count = 0;
 			}
 			else{
 				if(fifo_data != 0){
