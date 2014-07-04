@@ -15,5 +15,5 @@
 由于没有使用作者的工具，系统的某些部分有所不同。如引导步骤和内核内存区域都有所不同。我还参考了[os-dev](http://www.cs.bham.ac.uk/~exr/lectures/opsys/10_11/lectures/os-dev.pdf)。主要是参考引导部分。
 
 ###开发记录
-目前为止11天每天的总结都有记录在[博客](http://blog.slinuxer.com)。欢迎指出不足，也希望能提供参考。
+目前为止每天的总结都有记录在[博客](http://blog.slinuxer.com)。欢迎指出不足，也希望能提供参考。
 
