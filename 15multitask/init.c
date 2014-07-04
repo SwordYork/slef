@@ -9,6 +9,9 @@ extern struct TIMERCTL timerctl;
 void task_b_main(void);
 
 
+//static int count = 0;
+struct SHEET *sht_back; 
+
 void main(){
 	struct BOOTINFO *binfo;
 	struct FIFO32 fifo;
@@ -33,8 +36,7 @@ void main(){
 
 	// overlay control
 	struct SHTCTL *shtctl;
-	struct SHEET *sht_back, *sht_mouse;
-	struct SHEET *sht_win;
+	struct SHEET *sht_win, *sht_mouse;
 	unsigned char *buf_back, buf_mouse[256];
 	unsigned char *buf_win;
 
@@ -177,13 +179,15 @@ void main(){
 	tss_b.gs = 2 * 8;
 
 		
+	int count = 0;
+	mt_init();
 
 	for(;;){
-		itoa(s,timerctl.count,MAX_LENGTH);
-		putfont8_asc_sht(sht_back, 40, 28, COL8_000000, COL8_C6C6C6, s,12 );
+		count ++;
 		_io_cli();
 		if(0 == (fifo32_status(&fifo) )){
 			_io_stihlt(); 
+			//_io_sti();  // too fast
 		}
 		else{
 			fifo_data = fifo32_get(&fifo);
@@ -230,7 +234,8 @@ void main(){
 			}
 			else if( fifo_data == 10){
 				putfont8_asc_sht(sht_back, 0, 140, COL8_FFFFFF, COL8_008484,"10[sec]", 7);
-				_taskswitch4();
+				itoa(s,count,MAX_LENGTH);
+				putfont8_asc_sht(sht_back, 140, 28, COL8_000000, COL8_C6C6C6, s ,12 );
 			}
 			else if( fifo_data == 3){
 				putfont8_asc_sht(sht_back, 100, 0, COL8_FFFFFF, COL8_008484,"3[sec]", 6);
@@ -252,28 +257,36 @@ void main(){
 	}
 }
 
-
 void task_b_main(void)
 {
 	struct FIFO32 fifo;
-	struct TIMER *timer;
+	struct TIMER  *timer;
 	int i, fifobuf[128];
+	//extern int count;
+	char s[MAX_LENGTH];
 
+	int count = 0;
 	fifo32_init(&fifo, 128, fifobuf);
 	timer = timer_alloc();
 	timer_init(timer, &fifo, 1);
-	timer_settime(timer, 500);
+	timer_settime(timer, 1);
+	extern struct SHEET *sht_back;
+
 
 	for (;;) { 
+		count ++ ;
 		_io_cli(); 
 		if(fifo32_status(&fifo) == 0){
 			_io_stihlt();
+			//_io_sti();
 		}
 		else{
 			i = fifo32_get(&fifo);
 			_io_sti();
-			if( i == 1 ){
-				_taskswitch3();
+			if(i==1){
+				itoa(s,count,MAX_LENGTH);
+				putfont8_asc_sht(sht_back, 240, 28, COL8_000000, COL8_C6C6C6, s ,12 );
+				timer_settime(timer, 1);
 			}
 		}
 	}

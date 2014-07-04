@@ -15,7 +15,7 @@ kernel.sys: kernel_entry.o asmfunc.o kernel.o
 
 kernel.o: graphic.o dsctbl.o init.o int.o \
 	itoa.o fifo.o mouse.o keyboard.o memory.o \
-	sheet.o timer.o
+	sheet.o timer.o mtask.o
 	ld -o $@ $(LD_ARCH) -r $^  
  
 %.o: %.c

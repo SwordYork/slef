@@ -28,6 +28,7 @@ void init_pit(void){
 }
 
 void inthandler20(int *esp){
+	char ts = 0;
 	int i,j;
 	struct TIMER *timer;
 
@@ -43,7 +44,11 @@ void inthandler20(int *esp){
 			break;
 		}
 		timer->flags == TIMER_FLAGS_ALLOC;
-		fifo32_put(timer->fifo, timer->data);
+		if(timer != mt_timer){
+			fifo32_put(timer->fifo, timer->data);
+		}else{
+			ts = 1;
+		}
 		// find last timer
 		timer = timer->next_timer;
 	}
@@ -51,6 +56,10 @@ void inthandler20(int *esp){
 	// next_timer setting
 	timerctl.t0 = timer;		// the lastest timer
 	timerctl.next_time = timerctl.t0 -> timeout;
+
+	if(ts != 0){
+		mt_taskswitch();
+	}
 
 	return;
 }

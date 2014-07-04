@@ -58,8 +58,7 @@ void _asm_inthandler2c(void);
 int _load_cr0(void);
 void _store_cr0(int cr0);
 void _load_tr(int tr);
-void _taskswitch4(void);
-void _taskswitch3(void);
+void _farjmp(int far, int pos);
 
 
 
@@ -297,5 +296,9 @@ struct TSS32 {
 	int ldtr, iomap;
 };
 
+struct TIMER *mt_timer;
+int mt_tr;
+void mt_init(void);
+void mt_taskswitch(void);
 
 #endif
