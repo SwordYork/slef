@@ -19,6 +19,8 @@ struct TASK *task_init(struct MEMMAN *memman){
 	task = task_alloc();
 	task->flags = 2;
 	taskctl->running_task = 1;
+	// must be 0, taskctl start from 0.
+	// represent init task
 	taskctl->runnow = 0;
 	taskctl->tasks[0] = task;
 	_load_tr(task->sel);
@@ -74,4 +76,42 @@ void task_switch(void){
 		_farjmp(0, taskctl->tasks[taskctl->runnow]->sel);
 	}
 	return;
+}
+
+void task_sleep(struct TASK *task){
+	int i;
+	char ts = 0;
+	if(task -> flags == 2){
+		// current task is running
+		// first to switch task
+		if(task == taskctl->tasks[taskctl->runnow]){
+			ts = 1;
+		}
+
+		for( i = 0; i < taskctl->running_task; ++i){
+			if(taskctl->tasks[i] == task){ // compare memory address
+				break;
+			}
+		}
+
+		taskctl->running_task --;
+		// move according
+		if(i < taskctl->runnow){
+			taskctl->runnow --;
+		}
+		// real move
+		for(;i < taskctl->running_task; i ++ ){
+			taskctl->tasks[i] = taskctl->tasks[i + 1];
+		}
+
+		// setting sleep task
+		task->flags = 1;
+		// switch task
+		if( ts != 0){
+			taskctl->runnow = (taskctl->runnow >= taskctl->running_task) ? 0 : taskctl->runnow;
+			_farjmp(0, taskctl->tasks[taskctl->runnow]->sel);
+		}
+		return;
+
+	}
 }

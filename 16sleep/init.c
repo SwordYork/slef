@@ -46,7 +46,7 @@ void main(){
 	_io_sti();
 
 	// init fifo
-	fifo32_init(&fifo, BUF_LEN, fifobuf);
+	fifo32_init(&fifo, BUF_LEN, fifobuf, 0);
 
 	init_keyboard(&fifo, 256);
 	enable_mouse(&fifo, 512, &mdec);
@@ -144,9 +144,10 @@ void main(){
 	/*
 	 * TSS
 	 */
-	task_init(memman);
 
-	struct TASK *task_b;
+	struct TASK *task_a,*task_b;
+	task_a = task_init(memman);
+	fifo.task = task_a;
 
 
 	task_b = task_alloc();
@@ -168,6 +169,7 @@ void main(){
 		count ++;
 		_io_cli();
 		if(0 == (fifo32_status(&fifo) )){
+			task_sleep(task_a);
 			_io_stihlt(); 
 			//_io_sti();  // too fast
 		}
@@ -248,7 +250,7 @@ void task_b_main(void)
 	char s[MAX_LENGTH];
 
 	int count = 0;
-	fifo32_init(&fifo, 128, fifobuf);
+	fifo32_init(&fifo, 128, fifobuf, 0);
 	timer = timer_alloc();
 	timer_init(timer, &fifo, 1);
 	timer_settime(timer, 1);
