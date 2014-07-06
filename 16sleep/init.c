@@ -5,8 +5,7 @@
 
 extern struct TIMERCTL timerctl;
 
-void task_b_main(void);
-
+void task_b_main(struct SHEET *sht_win_b);
 
 //static int count = 0;
 struct SHEET *sht_back; 
@@ -22,7 +21,7 @@ void main(){
 	// mouse and keyboard data
 	int fifobuf[BUF_LEN];
 
-	struct TIMER *timer, *timer2, *timer3;
+	struct TIMER *timer;
 
 	int fifo_data;
 	struct MOUSE_DEC mdec;
@@ -35,9 +34,10 @@ void main(){
 
 	// overlay control
 	struct SHTCTL *shtctl;
-	struct SHEET *sht_win, *sht_mouse;
+	struct SHEET *sht_win, *sht_mouse, *sht_win_b[3];
 	unsigned char *buf_back, buf_mouse[256];
-	unsigned char *buf_win;
+	unsigned char *buf_win, *buf_win_b;
+	struct TASK *task_a,*task_b[3];
 
 	// gdt control
 	init_gdtidt();
@@ -51,18 +51,10 @@ void main(){
 	init_keyboard(&fifo, 256);
 	enable_mouse(&fifo, 512, &mdec);
 
+
 	timer = timer_alloc();
-	timer_init(timer, &fifo, 10);
-	timer_settime(timer, 1000);
-
-
-	timer2 = timer_alloc();
-	timer_init(timer2, &fifo, 3);
-	timer_settime(timer2, 300);
-	
-	timer3 = timer_alloc();
-	timer_init(timer3,&fifo, 1);
-	timer_settime(timer3, 50);
+	timer_init(timer,&fifo, 1);
+	timer_settime(timer, 50);
 
 
 	// must after init pit
@@ -90,6 +82,32 @@ void main(){
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
 	sht_back = sheet_alloc(shtctl);			// background sheet
 	sht_mouse = sheet_alloc(shtctl);		// mouse sheet
+
+	int i;
+	task_a = (struct TASK *) task_init(memman);
+	// task win b
+	for (i = 0; i < 3; ++i){
+		sht_win_b[i] = sheet_alloc(shtctl);
+		buf_win_b = (unsigned char *) memman_alloc_4k(memman, 144 * 52);
+		sheet_setbuf(sht_win_b[i], buf_win_b, 144, 52 , -1);
+		make_window8(buf_win_b, 144, 52, "back window");
+		task_b[i] = task_alloc();
+		// why -8, see p306
+		// 8 = 4 byte address + 4 byte  value
+		task_b[i]->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
+		task_b[i]->tss.eip = (int) &task_b_main;
+		task_b[i]->tss.eflags = 0x00000202; // IF = 1;
+		task_b[i]->tss.es = 2 * 8;
+		task_b[i]->tss.cs = 1 * 8;
+		task_b[i]->tss.ss = 2 * 8;
+		task_b[i]->tss.ds = 2 * 8;
+		task_b[i]->tss.fs = 2 * 8;
+		task_b[i]->tss.gs = 2 * 8;
+		*((int *) (task_b[i]->tss.esp+4)) = (int) sht_win_b[i];
+		task_submit(task_b[i]);
+	}
+
+	// task win
 	sht_win = sheet_alloc(shtctl);
 
 	buf_back = (unsigned char *) memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);		// background buffer
@@ -104,8 +122,6 @@ void main(){
 	init_mouse_cursor8(buf_mouse, 99);
 	make_window8(buf_win, 160, 52, "counter");
 
-	// init slide
-	sheet_slide(sht_back, 0, 0);
 
 
 	// initial mouse position
@@ -119,18 +135,25 @@ void main(){
 
 	// init mouse slide
 	// init position 0,0
+	// init slide
+	sheet_slide(sht_back, 0, 0);
 	sheet_slide(sht_mouse, mx, my);
-	sheet_slide(sht_win,80,72);
+    sheet_slide(sht_win_b[0],320,52);
+	sheet_slide(sht_win_b[1],320,152);
+	sheet_slide(sht_win_b[2],40,52);
+	sheet_slide(sht_win,40,152);
 
 	sheet_updown(sht_back, 0);
-	sheet_updown(sht_win, 1);
-	sheet_updown(sht_mouse, 2);
+	sheet_updown(sht_win, 4);
+	sheet_updown(sht_win_b[0], 1);
+	sheet_updown(sht_win_b[1], 2);
+	sheet_updown(sht_win_b[2], 3);
+	sheet_updown(sht_mouse, 5);
 	/*-------------------------------------------------
 	 *  screen 
 	 *  ***********************************************/
 
 	/***************  memory info  *********/
-	/*  
 	itoa(s,memtotal / 1024 /1024,MAX_LENGTH);
 	putfont8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 
@@ -138,30 +161,12 @@ void main(){
 	putfont8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, s);
 
 	sheet_refresh(sht_back, 0, 32, binfo->scrnx, 80);
-	*/
 	/***************  memory info  *********/
 
 	/*
 	 * TSS
 	 */
-
-	struct TASK *task_a,*task_b;
-	task_a = task_init(memman);
 	fifo.task = task_a;
-
-
-	task_b = task_alloc();
-	task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
-	task_b->tss.eip = (int) &task_b_main;
-	task_b->tss.eflags = 0x00000202; /* IF = 1; */
-	task_b->tss.es = 2 * 8;
-	task_b->tss.cs = 1 * 8;
-	task_b->tss.ss = 2 * 8;
-	task_b->tss.ds = 2 * 8;
-	task_b->tss.fs = 2 * 8;
-	task_b->tss.gs = 2 * 8;
-	task_submit(task_b);
-
 		
 	int count = 0;
 
@@ -169,7 +174,7 @@ void main(){
 		count ++;
 		_io_cli();
 		if(0 == (fifo32_status(&fifo) )){
-			task_sleep(task_a);
+		//	task_sleep(task_a);
 			_io_stihlt(); 
 			//_io_sti();  // too fast
 		}
@@ -188,8 +193,6 @@ void main(){
 						putfont8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF," ", 1);
 						cursor_x -= 8;
 					}
-				//	boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x+7, 43);
-				//	sheet_refresh(sht_win, cursor_x, 28, cursor_x+7, 43);
 				}
 			}
 			else if(512 <= fifo_data && fifo_data < 768){ // mouse data
@@ -216,24 +219,16 @@ void main(){
 				}
 
 			}
-			else if( fifo_data == 10){
-				putfont8_asc_sht(sht_back, 0, 140, COL8_FFFFFF, COL8_008484,"10[sec]", 7);
-				itoa(s,count,MAX_LENGTH);
-				putfont8_asc_sht(sht_back, 140, 28, COL8_000000, COL8_C6C6C6, s ,12 );
-			}
-			else if( fifo_data == 3){
-				putfont8_asc_sht(sht_back, 100, 0, COL8_FFFFFF, COL8_008484,"3[sec]", 6);
-			}
 			else{
 			  	if(fifo_data != 0){
-					timer_init(timer3, &fifo, 0);
+					timer_init(timer, &fifo, 0);
 					boxfill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
 				}
 				else{
-					timer_init(timer3, &fifo, 1);
+					timer_init(timer, &fifo, 1);
 					boxfill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
 				}
-				timer_settime(timer3, 50);
+				timer_settime(timer, 50);
 				sheet_refresh(sht_back, 8, 96, 16, 112);
 			}
 
@@ -241,7 +236,7 @@ void main(){
 	}
 }
 
-void task_b_main(void)
+void task_b_main(struct SHEET *sht_win_b)
 {
 	struct FIFO32 fifo;
 	struct TIMER  *timer;
@@ -252,8 +247,8 @@ void task_b_main(void)
 	int count = 0;
 	fifo32_init(&fifo, 128, fifobuf, 0);
 	timer = timer_alloc();
-	timer_init(timer, &fifo, 1);
-	timer_settime(timer, 1);
+	timer_init(timer, &fifo, 100);
+	timer_settime(timer, 100);
 	extern struct SHEET *sht_back;
 
 
@@ -261,16 +256,16 @@ void task_b_main(void)
 		count ++ ;
 		_io_cli(); 
 		if(fifo32_status(&fifo) == 0){
-			_io_stihlt();
-			//_io_sti();
+			//_io_stihlt();
+			_io_sti();
 		}
 		else{
 			i = fifo32_get(&fifo);
 			_io_sti();
-			if(i==1){
+			if(i==100){
 				itoa(s,count,MAX_LENGTH);
-				putfont8_asc_sht(sht_back, 240, 28, COL8_000000, COL8_C6C6C6, s ,12 );
-				timer_settime(timer, 1);
+				putfont8_asc_sht(sht_win_b, 24, 28, COL8_000000, COL8_C6C6C6, s ,12 );
+				timer_settime(timer, 100);
 			}
 		}
 	}
