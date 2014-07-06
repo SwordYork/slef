@@ -18,6 +18,7 @@ struct TASK *task_init(struct MEMMAN *memman){
 	 */
 	task = task_alloc();
 	task->flags = 2;
+	task->priority = 10;		// 0.02 s
 	taskctl->running_task = 1;
 	// must be 0, taskctl start from 0.
 	// represent init task
@@ -25,7 +26,7 @@ struct TASK *task_init(struct MEMMAN *memman){
 	taskctl->tasks[0] = task;
 	_load_tr(task->sel);
 	task_timer = timer_alloc();
-	timer_settime(task_timer, 2);
+	timer_settime(task_timer, task->priority);
 	return task;
 }
 
@@ -60,20 +61,27 @@ struct TASK *task_alloc(void){
 }
 
 
-void task_submit(struct TASK *task){
-	task->flags = 2;
-	taskctl->tasks[taskctl->running_task] = task;
-	taskctl->running_task ++;
+void task_submit(struct TASK *task, int priority){
+	task->priority = priority > 0 ? priority : task->priority;
+	if( task->flags != 2){
+		task->flags = 2;
+		taskctl->tasks[taskctl->running_task] = task;
+		taskctl->running_task ++;
+	}
 	return;
 }
 
 void task_switch(void){
-	timer_settime(task_timer, 2);
+	struct TASK *task;
+	// run next task or go to head
+	taskctl->runnow = (taskctl->runnow + 1) % taskctl->running_task;
+	task = taskctl->tasks[taskctl->runnow];
+	// priority is running timer
+	// priority higher will get more running timer 
+	timer_settime(task_timer, task->priority);
+	// jmp tss
 	if(taskctl->running_task >= 2){
-		// run next task or go to head
-		taskctl->runnow = (taskctl->runnow + 1) % taskctl->running_task;
-		// jmp tss
-		_farjmp(0, taskctl->tasks[taskctl->runnow]->sel);
+		_farjmp(0, task->sel);
 	}
 	return;
 }

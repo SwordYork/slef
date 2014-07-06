@@ -104,7 +104,7 @@ void main(){
 		task_b[i]->tss.fs = 2 * 8;
 		task_b[i]->tss.gs = 2 * 8;
 		*((int *) (task_b[i]->tss.esp+4)) = (int) sht_win_b[i];
-		task_submit(task_b[i]);
+		task_submit(task_b[i], i + 1);
 	}
 
 	// task win
@@ -139,9 +139,9 @@ void main(){
 	sheet_slide(sht_back, 0, 0);
 	sheet_slide(sht_mouse, mx, my);
     sheet_slide(sht_win_b[0],320,52);
-	sheet_slide(sht_win_b[1],320,152);
-	sheet_slide(sht_win_b[2],40,52);
-	sheet_slide(sht_win,40,152);
+	sheet_slide(sht_win_b[1],40,152);
+	sheet_slide(sht_win_b[2],320,152);
+	sheet_slide(sht_win,40,52);
 
 	sheet_updown(sht_back, 0);
 	sheet_updown(sht_win, 4);
@@ -256,8 +256,8 @@ void task_b_main(struct SHEET *sht_win_b)
 		count ++ ;
 		_io_cli(); 
 		if(fifo32_status(&fifo) == 0){
-			//_io_stihlt();
-			_io_sti();
+			_io_stihlt();
+			//_io_sti();
 		}
 		else{
 			i = fifo32_get(&fifo);

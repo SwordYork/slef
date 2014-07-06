@@ -72,7 +72,7 @@ int fifo32_put(struct FIFO32* fifo, int data){
 	if( fifo->task != 0){
 		// submit task
 		if(fifo->task->flags != 2){
-			task_submit(fifo->task);
+			task_submit(fifo->task, 0);
 		}
 	}
 	return 0;
