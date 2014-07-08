@@ -51,12 +51,6 @@ void main(){
 	init_keyboard(&fifo, 256);
 	enable_mouse(&fifo, 512, &mdec);
 
-
-	timer = timer_alloc();
-	timer_init(timer,&fifo, 1);
-	timer_settime(timer, 50);
-
-
 	// must after init pit
 	// qemu 1000 = 10s
 	// bochs 1000 = 1s
@@ -72,6 +66,13 @@ void main(){
 	// c400 is system
 	memman_free(memman, 0x00400000, memtotal - 0x00400000);
 
+	task_a = (struct TASK *) task_init(memman);
+	fifo.task = task_a;
+	task_submit(task_a, 1, 2);
+
+	timer = timer_alloc();
+	timer_init(timer,&fifo, 1);
+	timer_settime(timer, 50);
 
 	/**************************************************
 	 *  screen 
@@ -84,7 +85,6 @@ void main(){
 	sht_mouse = sheet_alloc(shtctl);		// mouse sheet
 
 	int i;
-	task_a = (struct TASK *) task_init(memman);
 	// task win b
 	for (i = 0; i < 3; ++i){
 		sht_win_b[i] = sheet_alloc(shtctl);
@@ -104,7 +104,7 @@ void main(){
 		task_b[i]->tss.fs = 2 * 8;
 		task_b[i]->tss.gs = 2 * 8;
 		*((int *) (task_b[i]->tss.esp+4)) = (int) sht_win_b[i];
-		task_submit(task_b[i], i + 1);
+		task_submit(task_b[i],2,i + 1);
 	}
 
 	// task win
@@ -166,7 +166,6 @@ void main(){
 	/*
 	 * TSS
 	 */
-	fifo.task = task_a;
 		
 	int count = 0;
 
@@ -174,13 +173,17 @@ void main(){
 		count ++;
 		_io_cli();
 		if(0 == (fifo32_status(&fifo) )){
-		//	task_sleep(task_a);
+			// if a not sleep b can't be excute
+			// if a in 1, b in 2
+			task_sleep(task_a);
 			_io_stihlt(); 
 			//_io_sti();  // too fast
 		}
 		else{
 			fifo_data = fifo32_get(&fifo);
 			_io_sti();
+			itoa(s,count,MAX_LENGTH);
+			putfont8_asc_sht(sht_win, 24, 28, COL8_000000, COL8_C6C6C6, s ,12 );
 			if(256 <= fifo_data && fifo_data < 512){ // keyboard data
 				if(fifo_data < 256 + 0x54){
 					if(keytable[fifo_data-256] != 0){
@@ -256,8 +259,8 @@ void task_b_main(struct SHEET *sht_win_b)
 		count ++ ;
 		_io_cli(); 
 		if(fifo32_status(&fifo) == 0){
-			_io_stihlt();
-			//_io_sti();
+			//_io_stihlt();
+			_io_sti();
 		}
 		else{
 			i = fifo32_get(&fifo);

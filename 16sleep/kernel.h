@@ -291,7 +291,9 @@ void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);
 /*
  * TSS
  */
-#define MAX_TASKS 	1000
+#define MAX_TASKS	1000
+#define MAX_TASKS_PERLV	100
+#define MAX_TASKLEVELS	10
 #define TASK_GDT0 	3
 #define AR_TSS32		0x0089
 struct TSS32 {
@@ -304,22 +306,33 @@ struct TSS32 {
 struct TASK{
 	// sel is gdt number
 	int sel, flags;
-	int priority;
+	int priority, level;
 	struct TSS32 tss;
 };
 
-struct TASKCTL {
-	int running_task;
+struct TASKLEVEL{
+	int total_running_task;
 	int runnow;
-	struct TASK *tasks[MAX_TASKS];
+	struct TASK *tasks[MAX_TASKS_PERLV];
+};
+
+struct TASKCTL {
+	int now_lv;
+	char lv_change;
+	struct TASKLEVEL task_level[MAX_TASKLEVELS];
 	struct TASK tasks0[MAX_TASKS];
 };
 
 struct TASKCTL *taskctl;
 struct TIMER *task_timer;
 struct TASK *task_alloc(void);
-void task_submit(struct TASK *task, int priority);
+void task_add_tolevel(struct TASK *task);
+void task_remove_fromlevel(struct TASK *task);
+// submit a task to queue
+void task_submit(struct TASK *task,int level ,int priority);
+void task_switch_sub(void);
 void task_switch(void);
+struct TASK *task_now(void);
 void task_sleep(struct TASK *task);
 
 #endif
